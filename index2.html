@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Pedidos - Laura López</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <section id="productos">
+            <h2>Gestión de Productos</h2>
+            <div class="table-actions">
+                <button id="showClientsDbBtn" class="action-button">Ver Clientes Registrados</button>
+                <button id="exportProductsBtn" class="action-button export-button">Exportar Productos a Excel</button>
+                <input type="file" id="importProductsFile" accept=".xlsx, .xls" style="display: none;">
+                <button id="importProductsBtn" class="action-button import-button">Importar Productos desde Excel</button>
+            </div>
+            <table id="products-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio Unitario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+
+            <div class="add-product-form">
+                <h2>Agregar/Editar Producto</h2>
+                <div>
+                    <label for="productName">Nombre del Producto:</label>
+                    <input type="text" id="productName" placeholder="Ej: Peluche Pequeño">
+                </div>
+                <div>
+                    <label for="productPrice">Precio Unitario:</label>
+                    <input type="number" id="productPrice" min="100" placeholder="Ej: 15000">
+                </div>
+                <button id="addProductBtn">Agregar Producto</button>
+                <button id="updateProductBtn" style="display: none; margin-top: 10px;">Actualizar Producto</button>
+                <button id="cancelEditBtn" style="display: none; margin-top: 10px;">Cancelar Edición</button>
+                <input type="hidden" id="editProductId">
+            </div>
+        </section>
+
+        <section id="calculadora">
+            <h2>Calcula tu Pedido</h2>
+            <div id="calculator-section">
+                <div id="product-list-container">
+                    <h3>Selecciona tus Productos</h3>
+                    <input type="text" id="productSearch" placeholder="Buscar Producto...">
+                    <div id="search-results">
+                        </div>
+                </div>
+
+                <div id="order-summary-container">
+                    <h3>Resumen del Pedido</h3>
+                    <div id="selected-products">
+                        </div>
+
+                    <div class="input-group">
+                        <label for="deliveryCost">Costo de Domicilio:</label>
+                        <input type="number" id="deliveryCost" min="0" value="0" placeholder="Ej: 5000">
+                    </div>
+
+                    <div class="total-row">
+                        <span>Total a Cobrar:</span>
+                        <span id="finalTotal">$0</span>
+                    </div>
+
+                    <button id="saveOrderBtn">Guardar Pedido</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="order-history-section">
+            <h2>Registro de Pedidos Vendidos</h2>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="filterStartDate">Desde:</label>
+                    <input type="date" id="filterStartDate">
+                </div>
+                <div class="filter-group">
+                    <label for="filterEndDate">Hasta:</label>
+                    <input type="date" id="filterEndDate">
+                </div>
+                <div class="filter-group">
+                    <label for="filterClientName">Cliente:</label>
+                    <input type="text" id="filterClientName" placeholder="Nombre del Cliente">
+                </div>
+                <div class="filter-group">
+                    <label for="filterOrderNumber">Pedido #:</label>
+                    <input type="number" id="filterOrderNumber" placeholder="Ej: 123">
+                </div>
+                <span class="total-summary">Total de Pedidos Filtrados: <span id="filteredOrdersTotal">$0</span></span>
+            </div>
+            <div id="order-history-list">
+                <p id="noOrdersMessage" style="display: none;">No hay órdenes guardadas aún.</p>
+            </div>
+            <button id="showMoreOrdersBtn" class="action-button" style="display:none;">Ver Más Pedidos</button>
+        </section>
+    </div>
+
+    <div id="clientDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button client-modal-close">&times;</span>
+            <h3>Detalles del Cliente y Entrega</h3>
+            <div class="input-group">
+                <label for="modalClientName">Nombre del Cliente:</label>
+                <input type="text" id="modalClientName" placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="input-group">
+                <label for="modalClientContact">Contacto (Tel/WhatsApp):</label>
+                <input type="text" id="modalClientContact" placeholder="Ej: 3101234567">
+            </div>
+             <div class="input-group">
+                <label for="modalDeliveryTime">Hora de Entrega:</label>
+                <input type="time" id="modalDeliveryTime">
+            </div>
+            <div class="input-group">
+                <label for="modalDeliveryAddress">Dirección de Entrega:</label>
+                <input type="text" id="modalDeliveryAddress" placeholder="Ej: Calle 10 # 5-20, Apto 301">
+            </div>
+            <div class="input-group">
+                <label for="modalCityNeighborhood">Ciudad/Municipio/Barrio:</label>
+                <input type="text" id="modalCityNeighborhood" placeholder="Ej: Bogotá, Usaquén">
+            </div>
+            <div class="input-group">
+                <label for="modalProductNameFinal">Nombre del Producto Final:</label>
+                <input type="text" id="modalProductNameFinal" placeholder="Ej: Ramo de Rosas y Chocolates">
+            </div>
+            <p class="modal-total"><strong>Valor a Cobrar:</strong> <span id="modalClientDetailsTotal"></span></p>
+            <button id="confirmSaveOrderBtn">Confirmar y Guardar Pedido</button>
+        </div>
+    </div>
+
+    <div id="deliveryInfoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button delivery-modal-close">&times;</span>
+            <h3>Información para el Domiciliario</h3>
+            <p><strong>Pedido #:</strong> <span id="deliveryModalOrderNumber"></span></p>
+            <p><strong>Cliente:</strong> <span id="deliveryModalClientName"></span></p>
+            <p><strong>Contacto:</strong> <span id="deliveryModalClientContact"></span></p>
+            <p><strong>Hora de Entrega:</strong> <span id="deliveryModalDeliveryTime"></span></p>
+            <p><strong>Dirección:</strong> <span id="deliveryModalDeliveryAddress"></span></p>
+            <p><strong>Ciudad/Municipio/Barrio:</strong> <span id="deliveryModalCityNeighborhood"></span></p>
+            <p><strong>Producto Final:</strong> <span id="deliveryModalProductNameFinal"></span></p>
+            <p class="modal-total"><strong>Valor a Cobrar:</strong> <span id="deliveryModalFinalTotal"></span></p>
+            <button id="copyToClipboardBtn">Copiar al Portapapeles</button>
+            <button id="sendToWhatsappBtn">Enviar por WhatsApp</button>
+        </div>
+    </div>
+
+    <div id="clientsDbModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button clients-db-modal-close">&times;</span>
+            <h3>Base de Datos de Clientes</h3>
+            <button id="exportClientsBtn" class="action-button export-button" style="margin-bottom: 20px;">Exportar Clientes a Excel</button>
+            <table id="clients-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Contacto</th>
+                        <th>Dirección</th>
+                        <th>Ciudad/Barrio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <p id="noClientsMessage" style="display: none; text-align: center; margin-top: 20px;">No hay clientes registrados aún.</p>
+        </div>
+    </div>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
