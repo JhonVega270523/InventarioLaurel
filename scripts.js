@@ -716,13 +716,14 @@ function renderOrderHistory() {
         return matchesDate && matchesClient && matchesOrderNumber;
     });
 
-    // Lógica de Ordenamiento Añadida (se mantiene igual)
+    // Lógica de Ordenamiento Añadida y Modificada
     filteredOrders.sort((a, b) => {
         const statusOrder = { 'pending': 0, 'dispatched': 1, 'delivered': 2 };
 
         const statusA = statusOrder[a.status || 'pending'];
         const statusB = statusOrder[b.status || 'pending'];
 
+        // 1. Ordenar por Estado
         if (statusA !== statusB) {
             return statusA - statusB;
         }
@@ -730,9 +731,18 @@ function renderOrderHistory() {
         const dateA = a.deliveryDate ? a.deliveryDate.getTime() : Infinity;
         const dateB = b.deliveryDate ? b.deliveryDate.getTime() : Infinity;
 
-        return dateA - dateB;
+        // 2. Ordenar por Fecha de Entrega (de más cerca a más lejana)
+        if (dateA !== dateB) {
+            return dateA - dateB;
+        }
+
+        // 3. Ordenar por Hora de Entrega (de más temprano a más tarde, hora militar)
+        const timeA = a.deliveryTime ? parseInt(a.deliveryTime.replace(':', '')) : Infinity;
+        const timeB = b.deliveryTime ? parseInt(b.deliveryTime.replace(':', '')) : Infinity;
+        
+        return timeA - timeB;
     });
-    // Fin de la Lógica de Ordenamiento Añadida
+    // Fin de la Lógica de Ordenamiento Añadida y Modificada
 
     filteredOrders.forEach(order => {
         totalFilteredOrdersAmount += order.finalTotal;
