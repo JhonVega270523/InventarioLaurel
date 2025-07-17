@@ -700,7 +700,7 @@ function confirmAndSaveOrder() {
 function renderOrderHistory() {
     orderHistoryList.innerHTML = '';
     let totalFilteredOrdersAmount = 0;
-    let totalFilteredProfitsAmount = 0; // Nuevo: total de ganancias filtradas
+    let totalFilteredProfitsAmount = 0;
 
     const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value + 'T00:00:00') : null;
     const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value + 'T23:59:59') : null;
@@ -716,14 +716,30 @@ function renderOrderHistory() {
         return matchesDate && matchesClient && matchesOrderNumber;
     });
 
-    filteredOrders.sort((a, b) => b.orderNumber - a.orderNumber);
+    // Lógica de Ordenamiento Añadida (se mantiene igual)
+    filteredOrders.sort((a, b) => {
+        const statusOrder = { 'pending': 0, 'dispatched': 1, 'delivered': 2 };
+
+        const statusA = statusOrder[a.status || 'pending'];
+        const statusB = statusOrder[b.status || 'pending'];
+
+        if (statusA !== statusB) {
+            return statusA - statusB;
+        }
+
+        const dateA = a.deliveryDate ? a.deliveryDate.getTime() : Infinity;
+        const dateB = b.deliveryDate ? b.deliveryDate.getTime() : Infinity;
+
+        return dateA - dateB;
+    });
+    // Fin de la Lógica de Ordenamiento Añadida
 
     filteredOrders.forEach(order => {
         totalFilteredOrdersAmount += order.finalTotal;
-        totalFilteredProfitsAmount += order.finalProfit || 0; // Sumar la ganancia consolidada
+        totalFilteredProfitsAmount += order.finalProfit || 0;
     });
     filteredOrdersTotalSpan.textContent = `$${formatCurrency(totalFilteredOrdersAmount)}`;
-    filteredProfitsTotalSpan.textContent = `$${formatCurrency(totalFilteredProfitsAmount)}`; // Mostrar ganancias filtradas
+    filteredProfitsTotalSpan.textContent = `$${formatCurrency(totalFilteredProfitsAmount)}`;
 
     if (filteredOrders.length === 0) {
         noOrdersMessage.style.display = 'block';
@@ -750,6 +766,8 @@ function renderOrderHistory() {
                 })}</p>
                 ${order.clientName ? `<p><strong>Cliente:</strong> ${order.clientName}</p>` : ''}
                 ${order.productNameFinal ? `<p><strong>Producto Final:</strong> ${order.productNameFinal}</p>` : ''}
+                ${order.deliveryDate ? `<p><strong>Fecha de Entrega:</strong> ${order.deliveryDate.toLocaleDateString('es-CO')}</p>` : ''}
+                ${order.deliveryTime ? `<p><strong>Hora de Entrega:</strong> ${order.deliveryTime}</p>` : ''}
 
                 <div class="items-list">
                     <strong>Detalle de Productos:</strong>
@@ -1247,7 +1265,7 @@ sendToWhatsappBtn.addEventListener('click', sendDeliveryInfoToWhatsapp);
 
 exportProductsBtn.addEventListener('click', () => exportTableToExcel('products-table', 'productos'));
 exportOrdersBtn.addEventListener('click', () => exportTableToExcel(null, 'pedidos_registrados', true));
-exportClientsBtn.addEventListener('click', () => exportTableToExcel('clients-table', 'clientes')); // Event listener para el nuevo botón
+exportClientsBtn.addEventListener('click', () => exportTableToExcel('clients-table', 'clientes'));
 
 importProductsBtn.addEventListener('click', () => {
     importProductsFile.click();
