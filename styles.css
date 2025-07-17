@@ -793,3 +793,43 @@ button:disabled {
         width: 100%;
     }
 }
+/* Colores de estado para botones de filtro y estados en tarjetas */
+.pending-color {
+    background-color: #ffc107; /* Amarillo */
+    color: #333;
+}
+.dispatched-color {
+    background-color: #17a2b8; /* Azul claro */
+    color: white;
+}
+.delivered-color {
+    background-color: #28a745; /* Verde */
+    color: white;
+}
+.all-color {
+    background-color: #6c757d; /* Gris */
+    color: white;
+}
+
+/* Estilos para los botones de filtro (puedes ajustar el tamaño) */
+.status-filter-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em; /* Más pequeños */
+    font-weight: bold;
+    opacity: 0.7; /* Ligeramente transparentes por defecto */
+    transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.status-filter-btn:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.status-filter-btn.active {
+    opacity: 1;
+    border: 2px solid #0056b3; /* Borde para el filtro activo */
+    transform: translateY(0);
+}

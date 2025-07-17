@@ -89,6 +89,11 @@
                 <button id="exportClientsBtn" class="action-btn">Exportar Clientes (Excel)</button> <button id="showClientsDbBtn" class="action-btn">Ver Base de Datos de Clientes</button>
             </div>
             <p id="noOrdersMessage" class="info-message" style="display: none;">No hay pedidos registrados.</p>
+            <div class="order-filters-status" style="margin-bottom: 10px; display: flex; gap: 5px;">
+            <button id="filterStatusPending" class="status-filter-btn pending-color">Pendientes</button>
+            <button id="filterStatusDispatched" class="status-filter-btn dispatched-color">Despachados</button>
+            <button id="filterStatusDelivered" class="status-filter-btn delivered-color">Entregados</button>
+            <button id="filterStatusAll" class="status-filter-btn all-color active">Todos</button> </div>
             <div id="order-history-list" class="order-cards-container">
                 </div>
             <button id="showMoreOrdersBtn" class="action-btn" style="display: none;">Ver Más Pedidos</button>

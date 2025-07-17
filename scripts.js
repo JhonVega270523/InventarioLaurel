@@ -87,6 +87,13 @@ const importProductsBtn = document.getElementById('importProductsBtn');
 const importProductsFile = document.getElementById('importProductsFile');
 const exportOrdersBtn = document.getElementById('exportOrdersBtn');
 
+const filterStatusPendingBtn = document.getElementById('filterStatusPending');
+const filterStatusDispatchedBtn = document.getElementById('filterStatusDispatched');
+const filterStatusDeliveredBtn = document.getElementById('filterStatusDelivered');
+const filterStatusAllBtn = document.getElementById('filterStatusAll'); // Nuevo botón "Todos"
+
+let currentStatusFilter = 'all'; // Variable para almacenar el filtro de estado activo
+
 let nextProductId = 1;
 let nextOrderId = 1;
 
@@ -712,18 +719,19 @@ function renderOrderHistory() {
         const matchesDate = (!startDate || orderDate >= startDate) && (!endDate || orderDate <= endDate);
         const matchesClient = !filterClientName || (order.clientName && order.clientName.toLowerCase().includes(filterClientName));
         const matchesOrderNumber = !filterOrderNumber || (order.orderNumber.toString() === filterOrderNumber);
+        // Nuevo filtro por estado
+        const matchesStatus = currentStatusFilter === 'all' || (order.status && order.status === currentStatusFilter);
 
-        return matchesDate && matchesClient && matchesOrderNumber;
+        return matchesDate && matchesClient && matchesOrderNumber && matchesStatus; // Incluir el nuevo filtro
     });
 
-    // Lógica de Ordenamiento Añadida y Modificada
+    // Lógica de Ordenamiento (se mantiene como la última modificación)
     filteredOrders.sort((a, b) => {
         const statusOrder = { 'pending': 0, 'dispatched': 1, 'delivered': 2 };
 
         const statusA = statusOrder[a.status || 'pending'];
         const statusB = statusOrder[b.status || 'pending'];
 
-        // 1. Ordenar por Estado
         if (statusA !== statusB) {
             return statusA - statusB;
         }
@@ -731,19 +739,19 @@ function renderOrderHistory() {
         const dateA = a.deliveryDate ? a.deliveryDate.getTime() : Infinity;
         const dateB = b.deliveryDate ? b.deliveryDate.getTime() : Infinity;
 
-        // 2. Ordenar por Fecha de Entrega (de más cerca a más lejana)
         if (dateA !== dateB) {
             return dateA - dateB;
         }
 
-        // 3. Ordenar por Hora de Entrega (de más temprano a más tarde, hora militar)
         const timeA = a.deliveryTime ? parseInt(a.deliveryTime.replace(':', '')) : Infinity;
         const timeB = b.deliveryTime ? parseInt(b.deliveryTime.replace(':', '')) : Infinity;
         
         return timeA - timeB;
     });
-    // Fin de la Lógica de Ordenamiento Añadida y Modificada
+    // Fin de la Lógica de Ordenamiento
 
+    // ... el resto de la función renderOrderHistory() sigue igual ...
+    // Asegúrate de que esta parte no se modifique:
     filteredOrders.forEach(order => {
         totalFilteredOrdersAmount += order.finalTotal;
         totalFilteredProfitsAmount += order.finalProfit || 0;
@@ -764,6 +772,7 @@ function renderOrderHistory() {
 
             const orderCard = document.createElement('div');
             orderCard.classList.add('recorded-order-card');
+            // ... el contenido innerHTML de la tarjeta sigue igual ...
             orderCard.innerHTML = `
                 <button class="delete-order-btn" data-id="${order.orderNumber}" aria-label="Eliminar Pedido ${order.orderNumber}">❌</button>
                 <h4>Pedido #${order.orderNumber}</h4>
@@ -853,7 +862,12 @@ function toggleOrderStatus(orderNumber) {
         }
         orders[orderIndex].status = newStatus;
         saveOrdersToLocalStorage();
-        renderOrderHistory();
+        
+        // Actualizar el filtro activo para mostrar el nuevo estado
+        currentStatusFilter = newStatus; // Establece el filtro al nuevo estado
+        updateStatusFilterButtons(newStatus); // Actualiza la clase activa de los botones
+        renderOrderHistory(); // Vuelve a renderizar con el nuevo filtro
+        
         showToast(`🔄 Estado de Pedido #${orderNumber} actualizado a: ${statusText}.`);
     }
 }
@@ -1250,6 +1264,32 @@ showMoreOrdersBtn.addEventListener('click', () => {
     renderOrderHistory();
 });
 
+// ... tus otros Event Listeners
+
+filterStatusPendingBtn.addEventListener('click', () => setStatusFilter('pending'));
+filterStatusDispatchedBtn.addEventListener('click', () => setStatusFilter('dispatched'));
+filterStatusDeliveredBtn.addEventListener('click', () => setStatusFilter('delivered'));
+filterStatusAllBtn.addEventListener('click', () => setStatusFilter('all'));
+
+// Asegúrate de que la inicialización del filtro se haga al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    // ... tus otras cargas y renderizaciones iniciales
+    loadProductsFromLocalStorage();
+    loadOrdersFromLocalStorage();
+    loadClientsFromLocalStorage();
+
+    renderProductTable();
+    filterAndRenderProductSelection();
+    calculateTotal();
+    
+    // Inicializar el filtro de estado y renderizar historial
+    currentStatusFilter = 'all'; // Por defecto, mostrar todos al cargar
+    updateStatusFilterButtons(currentStatusFilter); // Asegurar que el botón "Todos" esté activo
+    renderOrderHistory(); 
+
+    setupTabs();
+});
+
 modalClientNameInput.addEventListener('input', autoFillClientDetails);
 
 showClientsDbBtn.addEventListener('click', showClientsDbModal);
@@ -1340,3 +1380,18 @@ document.addEventListener('keydown', function(e) {
         showToast('🚫 F12 deshabilitado.');
     }
 });
+
+function setStatusFilter(status) {
+    currentStatusFilter = status;
+    allOrdersVisible = false; // Resetear "Ver Más/Menos" al cambiar de filtro
+    renderOrderHistory();
+    updateStatusFilterButtons(status);
+}
+
+function updateStatusFilterButtons(activeStatus) {
+    const allFilterButtons = document.querySelectorAll('.status-filter-btn');
+    allFilterButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    document.getElementById(`filterStatus${activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)}`).classList.add('active');
+}
