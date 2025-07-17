@@ -8,7 +8,6 @@ const defaultProducts = [
     { id: 'prod-7', name: 'Tarjeta Dedicatoria', price: 3000 }
 ];
 
-const FIXED_LABOR_COST = 40000; // Definimos el costo fijo de mano de obra
 const ORDERS_PER_PAGE = 6; // Número de pedidos a mostrar inicialmente
 
 let products = [];
@@ -19,13 +18,17 @@ let allOrdersVisible = false; // Estado para controlar si todos los pedidos est�
 const productsTableBody = document.querySelector('#products-table tbody');
 const searchInput = document.getElementById('productSearch');
 const searchResultsDiv = document.getElementById('search-results');
+const laborCostInput = document.getElementById('laborCost');
 const deliveryCostInput = document.getElementById('deliveryCost');
+const profitPercentageInput = document.getElementById('profitPercentage'); // NUEVO: Input para porcentaje de ganancia
+const estimatedProfitSpan = document.getElementById('estimatedProfit'); // NUEVO: Span para mostrar ganancia estimada
 const selectedProductsDiv = document.getElementById('selected-products');
 const finalTotalSpan = document.getElementById('finalTotal');
 const saveOrderBtn = document.getElementById('saveOrderBtn');
 const orderHistoryList = document.getElementById('order-history-list');
 const noOrdersMessage = document.getElementById('noOrdersMessage');
-const showMoreOrdersBtn = document.getElementById('showMoreOrdersBtn'); // Botón "Ver Más Pedidos"
+const showMoreOrdersBtn = document.getElementById('showMoreOrdersBtn');
+const toast = document.getElementById('toast');
 
 const productNameInput = document.getElementById('productName');
 const productPriceInput = document.getElementById('productPrice');
@@ -34,59 +37,73 @@ const updateProductBtn = document.getElementById('updateProductBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const editProductIdInput = document.getElementById('editProductId');
 
-// Nuevas referencias para los filtros de fecha y texto
 const filterStartDateInput = document.getElementById('filterStartDate');
 const filterEndDateInput = document.getElementById('filterEndDate');
 const filterClientNameInput = document.getElementById('filterClientName');
 const filterOrderNumberInput = document.getElementById('filterOrderNumber');
 const filteredOrdersTotalSpan = document.getElementById('filteredOrdersTotal');
+const filteredProfitsTotalSpan = document.getElementById('filteredProfitsTotal'); // Nuevo: Span para ganancias filtradas
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
-// Referencias al modal de detalles del cliente
 const clientDetailsModal = document.getElementById('clientDetailsModal');
 const clientModalCloseButton = document.querySelector('.client-modal-close');
 const modalClientNameInput = document.getElementById('modalClientName');
 const modalClientContactInput = document.getElementById('modalClientContact');
+const modalDeliveryDateInput = document.getElementById('modalDeliveryDate'); // NUEVO: Campo Fecha de Entrega
 const modalDeliveryTimeInput = document.getElementById('modalDeliveryTime');
 const modalDeliveryAddressInput = document.getElementById('modalDeliveryAddress');
+const modalReferencePointInput = document.getElementById('modalReferencePoint'); // Campo Punto de Referencia
 const modalCityNeighborhoodInput = document.getElementById('modalCityNeighborhood');
-const modalProductNameFinalInput = document.getElementById('modalProductNameFinal');
+const modalProductDetailsInput = document.getElementById('modalProductDetails'); // Campo Detalles del Producto
+const modalProductNameFinalInput = document.getElementById('modalProductNameFinal'); // Campo Producto Final
 const modalClientDetailsTotalSpan = document.getElementById('modalClientDetailsTotal');
 const confirmSaveOrderBtn = document.getElementById('confirmSaveOrderBtn');
 
-// Referencias al modal de información del domiciliario
 const deliveryInfoModal = document.getElementById('deliveryInfoModal');
 const deliveryModalCloseButton = document.querySelector('.delivery-modal-close');
 const deliveryModalOrderNumber = document.getElementById('deliveryModalOrderNumber');
 const deliveryModalClientName = document.getElementById('deliveryModalClientName');
 const deliveryModalClientContact = document.getElementById('deliveryModalClientContact');
+const deliveryModalDeliveryDate = document.getElementById('deliveryModalDeliveryDate'); // Info Fecha de Entrega
 const deliveryModalDeliveryTime = document.getElementById('deliveryModalDeliveryTime');
 const deliveryModalDeliveryAddress = document.getElementById('deliveryModalDeliveryAddress');
+const deliveryModalReferencePoint = document.getElementById('deliveryModalReferencePoint'); // Info Punto de Referencia
 const deliveryModalCityNeighborhood = document.getElementById('deliveryModalCityNeighborhood');
+const deliveryModalProductDetails = document.getElementById('deliveryModalProductDetails'); // Info Detalles del Producto
 const deliveryModalProductNameFinal = document.getElementById('deliveryModalProductNameFinal');
 const deliveryModalFinalTotal = document.getElementById('deliveryModalFinalTotal');
 const copyToClipboardBtn = document.getElementById('copyToClipboardBtn');
 const sendToWhatsappBtn = document.getElementById('sendToWhatsappBtn');
 
-// Referencias al nuevo modal de la base de datos de clientes
 const showClientsDbBtn = document.getElementById('showClientsDbBtn');
 const clientsDbModal = document.getElementById('clientsDbModal');
 const clientsDbModalCloseButton = document.querySelector('.clients-db-modal-close');
 const clientsTableBody = document.querySelector('#clients-table tbody');
-const noClientsMessageClientsDb = document.getElementById('noClientsMessage'); // Renombrado para evitar conflicto
+const noClientsMessageClientsDb = document.getElementById('noClientsMessage');
+const exportClientsBtn = document.getElementById('exportClientsBtn'); // Nuevo: Botón de exportar clientes
 
-// Nuevas referencias para los botones de exportar e importar
 const exportProductsBtn = document.getElementById('exportProductsBtn');
 const importProductsBtn = document.getElementById('importProductsBtn');
 const importProductsFile = document.getElementById('importProductsFile');
-const exportClientsBtn = document.getElementById('exportClientsBtn');
-
+const exportOrdersBtn = document.getElementById('exportOrdersBtn');
 
 let nextProductId = 1;
 let nextOrderId = 1;
 
-// Objeto para almacenar temporalmente la Pedido antes de abrir el modal de cliente
 let currentOrderToSave = null;
-let currentClientToEdit = null; // Variable para almacenar el cliente que se está editando
+let currentClientToEdit = null;
+
+// --- Funciones de Utilidad ---
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+}
+
+function formatCurrency(amount) {
+    return amount.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
 
 // --- Funciones de LocalStorage ---
 
@@ -114,6 +131,7 @@ function saveOrdersToLocalStorage() {
     const ordersToStore = orders.map(order => ({
         ...order,
         date: order.date.toISOString(),
+        deliveryDate: order.deliveryDate ? order.deliveryDate.toISOString() : null, // Guardar como ISO string
     }));
     localStorage.setItem('myProductsApp_orders', JSON.stringify(ordersToStore));
 }
@@ -125,10 +143,22 @@ function loadOrdersFromLocalStorage() {
         if (orders.length > 0) {
             orders.forEach(order => {
                 order.date = new Date(order.date);
-                // Asegurar que el estado exista, si no, establecerlo a 'pending'
+                if (order.deliveryDate) { // Convertir de nuevo a objeto Date
+                    order.deliveryDate = new Date(order.deliveryDate);
+                }
                 if (!order.status) {
                     order.status = 'pending';
                 }
+                if (order.profitPercentage === undefined) {
+                    order.profitPercentage = 0;
+                }
+                if (order.estimatedProfit === undefined) {
+                    order.estimatedProfit = 0;
+                }
+                // Asegurarse de que los nuevos campos existan para evitar errores
+                if (order.productDetails === undefined) order.productDetails = '';
+                if (order.referencePoint === undefined) order.referencePoint = '';
+                if (order.finalProfit === undefined) order.finalProfit = 0; // Asegurar el campo de ganancia final
             });
             const maxOrderId = Math.max(...orders.map(o => o.orderNumber));
             nextOrderId = maxOrderId + 1;
@@ -148,6 +178,12 @@ function loadClientsFromLocalStorage() {
     const storedClients = localStorage.getItem('myProductsApp_clientsDb');
     if (storedClients) {
         clientsDb = JSON.parse(storedClients);
+        // Asegurarse de que el campo referencePoint exista para clientes existentes
+        clientsDb.forEach(client => {
+            if (client.referencePoint === undefined) {
+                client.referencePoint = '';
+            }
+        });
     } else {
         clientsDb = [];
     }
@@ -188,12 +224,12 @@ function addProduct() {
     const price = parseFloat(productPriceInput.value);
 
     if (!name || isNaN(price) || price <= 0) {
-        alert('Por favor, ingresa un nombre y un precio válido para el producto.');
+        showToast('⚠️ Por favor, ingresa un nombre y un precio válido para el producto.');
         return;
     }
 
     if (products.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-        alert('Ya existe un producto con este nombre. Por favor, usa un nombre diferente o edita el producto existente.');
+        showToast('❕ Ya existe un producto con este nombre. Por favor, usa un nombre diferente o edita el producto existente.');
         return;
     }
 
@@ -206,6 +242,7 @@ function addProduct() {
     saveProductsToLocalStorage();
     resetProductForm();
     renderProductTable();
+    showToast('✅ Producto añadido exitosamente.');
 }
 
 function editProduct(id) {
@@ -218,6 +255,7 @@ function editProduct(id) {
         addProductBtn.style.display = 'none';
         updateProductBtn.style.display = 'block';
         cancelEditBtn.style.display = 'block';
+        productNameInput.focus();
     }
 }
 
@@ -227,12 +265,12 @@ function updateProduct() {
     const price = parseFloat(productPriceInput.value);
 
     if (!name || isNaN(price) || price <= 0) {
-        alert('Por favor, ingresa un nombre y un precio válido para el producto.');
+        showToast('⚠️ Por favor, ingresa un nombre y un precio válido para el producto.');
         return;
     }
 
     if (products.some(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== id)) {
-        alert('Ya existe otro producto con este nombre. Por favor, usa un nombre diferente.');
+        showToast('❕ Ya existe otro producto con este nombre. Por favor, usa un nombre diferente.');
         return;
     }
 
@@ -244,6 +282,7 @@ function updateProduct() {
     saveProductsToLocalStorage();
     resetProductForm();
     renderProductTable();
+    showToast('✅ Producto actualizado exitosamente.');
 }
 
 function deleteProduct(id) {
@@ -251,6 +290,7 @@ function deleteProduct(id) {
         products = products.filter(product => product.id !== id);
         saveProductsToLocalStorage();
         renderProductTable();
+        showToast('🗑️ Producto eliminado.');
     }
 }
 
@@ -282,10 +322,9 @@ function filterAndRenderProductSelection() {
     filteredProducts.forEach(product => {
         const productDiv = document.createElement('div');
         productDiv.classList.add('product-item');
-        // Asegúrate de que el valor inicial sea el que está en el carrito si ya existe
         const currentQuantity = currentOrderToSave && currentOrderToSave.items.find(item => item.id === product.id)
-                                 ? currentOrderToSave.items.find(item => item.id === product.id).quantity
-                                 : 0;
+                                             ? currentOrderToSave.items.find(item => item.id === product.id).quantity
+                                             : 0;
 
         productDiv.innerHTML = `
             <label for="${product.id}">${product.name} ($${formatCurrency(product.price)})</label>
@@ -314,8 +353,7 @@ function calculateTotal() {
             if (quantity > 0) {
                 const itemBasePrice = product.price * quantity;
                 const itemIncrement = itemBasePrice * 0.20; // 20% de incremento
-                const itemTotalWithIncrement = itemBasePrice + itemIncrement;
-
+                
                 totalBasePriceOfItems += itemBasePrice;
                 totalIncrementAmount += itemIncrement;
                 totalItemsCount += quantity;
@@ -327,35 +365,46 @@ function calculateTotal() {
                     basePrice: product.price,
                     totalBasePrice: itemBasePrice,
                     itemIncrement: itemIncrement,
-                    itemTotalWithIncrement: itemTotalWithIncrement
                 });
             }
         }
     });
 
-    const laborCost = totalItemsCount > 0 ? FIXED_LABOR_COST : 0;
+    const laborCost = parseFloat(laborCostInput.value) || 0;
     const deliveryCost = parseFloat(deliveryCostInput.value) || 0;
+    const profitPercentage = parseFloat(profitPercentageInput.value) || 0;
 
-    const finalTotal = totalBasePriceOfItems + totalIncrementAmount + laborCost + deliveryCost;
+    // Calcular la base para la ganancia del porcentaje
+    const baseForPercentageProfit = totalBasePriceOfItems + totalIncrementAmount + laborCost;
+    const percentageProfit = baseForPercentageProfit * (profitPercentage / 100);
+
+    // La ganancia estimada consolidada suma el incremento del 20% y la ganancia por porcentaje
+    const estimatedProfitConsolidated = totalIncrementAmount + percentageProfit;
+
+    // El total final ahora incluye la ganancia estimada consolidada
+    const finalTotal = totalBasePriceOfItems + totalIncrementAmount + laborCost + deliveryCost + percentageProfit;
 
     currentOrderToSave = {
         items: currentOrderItems,
         laborCost: laborCost,
         deliveryCost: deliveryCost,
         totalIncrementAmount: totalIncrementAmount,
+        estimatedProfit: estimatedProfitConsolidated, // Almacenar la ganancia consolidada
+        profitPercentage: profitPercentage,
         finalTotal: finalTotal,
-        totalBasePriceOfItems: totalBasePriceOfItems
+        totalBasePriceOfItems: totalBasePriceOfItems,
+        finalProfit: estimatedProfitConsolidated // Guardar la ganancia consolidada para el historial
     };
 
-    updateOrderSummary(currentOrderItems, laborCost, deliveryCost, finalTotal, totalIncrementAmount, totalBasePriceOfItems);
+    updateOrderSummary(currentOrderItems, laborCost, deliveryCost, finalTotal, totalIncrementAmount, totalBasePriceOfItems, estimatedProfitConsolidated, percentageProfit);
 }
 
-function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAmount, totalBasePriceOfItems) {
+function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAmount, totalBasePriceOfItems, estimatedProfitConsolidated, percentageProfit) {
     selectedProductsDiv.innerHTML = '';
 
-    saveOrderBtn.disabled = (orderItems.length === 0 && delivery === 0);
+    saveOrderBtn.disabled = (orderItems.length === 0 && labor === 0 && delivery === 0 && estimatedProfitConsolidated === 0);
 
-    if (orderItems.length === 0 && labor === 0 && delivery === 0) {
+    if (orderItems.length === 0 && labor === 0 && delivery === 0 && estimatedProfitConsolidated === 0) {
         selectedProductsDiv.innerHTML = '<p>No hay productos seleccionados ni costos adicionales.</p>';
         saveOrderBtn.disabled = true;
     } else {
@@ -365,7 +414,7 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
             itemElement.innerHTML = `
                 <span>${item.name} x ${item.quantity} ($${formatCurrency(item.basePrice)} c/u)</span>
                 <span>$${formatCurrency(item.totalBasePrice)}</span>
-                <button class="remove-item" data-id="${item.id}">❌</button>
+                <button class="remove-item" data-id="${item.id}" aria-label="Eliminar ${item.name}"></button>
             `;
             selectedProductsDiv.appendChild(itemElement);
         });
@@ -400,6 +449,16 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
             selectedProductsDiv.appendChild(laborElement);
         }
 
+        if (percentageProfit > 0) { // Mostrar la ganancia del porcentaje por separado en el resumen
+            const profitElement = document.createElement('div');
+            profitElement.classList.add('order-item');
+            profitElement.innerHTML = `
+                <span>Ganancia (${profitPercentageInput.value}%)</span>
+                <span>$${formatCurrency(percentageProfit)}</span>
+            `;
+            selectedProductsDiv.appendChild(profitElement);
+        }
+
         if (delivery > 0) {
             const deliveryElement = document.createElement('div');
             deliveryElement.classList.add('order-item');
@@ -411,6 +470,7 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
         }
     }
 
+    estimatedProfitSpan.textContent = `$${formatCurrency(estimatedProfitConsolidated)}`;
     finalTotalSpan.textContent = `$${formatCurrency(total)}`;
 
     document.querySelectorAll('.remove-item').forEach(button => {
@@ -420,38 +480,27 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
             if (inputToReset) {
                 inputToReset.value = 0;
                 calculateTotal();
-                filterAndRenderProductSelection(); // Volver a renderizar para que el input muestre 0
+                filterAndRenderProductSelection();
             }
         });
     });
-}
-
-function formatCurrency(amount) {
-    return amount.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 // --- Funciones de Gestión de Clientes ---
 
 function saveClient(clientData) {
     const existingClientIndex = clientsDb.findIndex(c => c.name.toLowerCase() === clientData.name.toLowerCase());
-    if (currentClientToEdit && currentClientToEdit.name.toLowerCase() === clientData.name.toLowerCase()) {
-        // Estamos editando el mismo cliente, simplemente actualizamos sus datos
-        Object.assign(clientsDb[existingClientIndex], clientData);
-    } else if (existingClientIndex !== -1) {
-        // Existe un cliente con el mismo nombre y no es el que estamos editando
-        // Esto podría ser un error o una confirmación, por ahora lo dejamos como está o podrías añadir un alert
-        // clientsDb[existingClientIndex] = { ...clientsDb[existingClientIndex], ...clientData };
-    } else if (currentClientToEdit) {
-        // Se cambió el nombre del cliente que se estaba editando, actualizamos el existente y limpiamos
+
+    if (currentClientToEdit) {
         const oldClientIndex = clientsDb.findIndex(c => c.name.toLowerCase() === currentClientToEdit.name.toLowerCase());
         if(oldClientIndex !== -1) {
-            clientsDb[oldClientIndex] = clientData;
+            clientsDb[oldClientIndex] = { ...clientsDb[oldClientIndex], ...clientData };
         } else {
-            clientsDb.push(clientData); // En caso de que no lo encuentre por alguna razón
+            clientsDb.push(clientData);
         }
-        currentClientToEdit = null; // Limpiar después de la edición
+    } else if (existingClientIndex !== -1) {
+        clientsDb[existingClientIndex] = { ...clientsDb[existingClientIndex], ...clientData };
     } else {
-        // Añadir nuevo cliente
         clientsDb.push(clientData);
     }
     saveClientsToLocalStorage();
@@ -463,26 +512,30 @@ function deleteClient(clientName) {
         clientsDb = clientsDb.filter(client => client.name.toLowerCase() !== clientName.toLowerCase());
         saveClientsToLocalStorage();
         renderClientsTable();
+        showToast(`🗑️ Cliente "${clientName}" eliminado.`);
     }
 }
 
 function editClient(clientName) {
     const clientToEdit = clientsDb.find(client => client.name.toLowerCase() === clientName.toLowerCase());
     if (clientToEdit) {
-        currentClientToEdit = clientToEdit; // Establecer el cliente que se está editando
-        closeClientsDbModal(); // Cerrar la base de datos de clientes
-        handleSaveOrder(); // Abrir el modal de detalles del cliente para editar
+        currentClientToEdit = clientToEdit;
+        closeClientsDbModal();
+        handleSaveOrder();
         modalClientNameInput.value = clientToEdit.name;
         modalClientContactInput.value = clientToEdit.contact || '';
-        modalDeliveryTimeInput.value = ''; // No guardamos la hora de entrega en la DB del cliente
+        modalDeliveryDateInput.value = ''; // No auto-llenar fecha de entrega para edición
+        modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = clientToEdit.address || '';
+        modalReferencePointInput.value = clientToEdit.referencePoint || ''; // Nuevo: Punto de Referencia
         modalCityNeighborhoodInput.value = clientToEdit.cityNeighborhood || '';
-        modalProductNameFinalInput.value = ''; // No guardamos el producto final en la DB del cliente
-        modalClientDetailsTotalSpan.textContent = `$0`; // O el total de una Pedido previa si se está rellenando
+        modalProductDetailsInput.value = ''; // No auto-llenar detalles de producto
+        modalProductNameFinalInput.value = '';
+        modalClientDetailsTotalSpan.textContent = `$0`;
         confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
+        modalClientNameInput.focus();
     }
 }
-
 
 function renderClientsTable() {
     clientsTableBody.innerHTML = '';
@@ -496,6 +549,7 @@ function renderClientsTable() {
                 <td>${client.name}</td>
                 <td>${client.contact || 'N/A'}</td>
                 <td>${client.address || 'N/A'}</td>
+                <td>${client.referencePoint || 'N/A'}</td>
                 <td>${client.cityNeighborhood || 'N/A'}</td>
                 <td>
                     <button class="edit-client-btn" data-name="${client.name}">Editar</button>
@@ -519,6 +573,7 @@ function autoFillClientDetails() {
     if (foundClient) {
         modalClientContactInput.value = foundClient.contact || '';
         modalDeliveryAddressInput.value = foundClient.address || '';
+        modalReferencePointInput.value = foundClient.referencePoint || ''; // Nuevo: Punto de Referencia
         modalCityNeighborhoodInput.value = foundClient.cityNeighborhood || '';
     }
 }
@@ -526,30 +581,32 @@ function autoFillClientDetails() {
 // --- Funciones de Gestión de Órdenes (Registro) ---
 
 function handleSaveOrder() {
-    // Si no hay productos seleccionados Y no hay costo de domicilio, no permitir guardar
-    // y si NO estamos editando un cliente existente
-    if (currentOrderToSave.items.length === 0 && currentOrderToSave.deliveryCost === 0 && !currentClientToEdit) {
-        alert('Por favor, agrega productos o un costo de domicilio para guardar el pedido.');
+    if (currentOrderToSave.items.length === 0 && currentOrderToSave.laborCost === 0 && currentOrderToSave.deliveryCost === 0 && currentOrderToSave.estimatedProfit === 0 && !currentClientToEdit) {
+        showToast('⚠️ Agrega productos, costo de mano de obra, un costo de domicilio o una ganancia para guardar el pedido.');
         return;
     }
 
-    // Si estamos editando un cliente, prellenar los campos del modal con los datos del cliente
     if (currentClientToEdit) {
         modalClientNameInput.value = currentClientToEdit.name;
         modalClientContactInput.value = currentClientToEdit.contact || '';
+        modalDeliveryDateInput.value = ''; // No auto-llenar fecha de entrega para edición
+        modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = currentClientToEdit.address || '';
+        modalReferencePointInput.value = currentClientToEdit.referencePoint || ''; // Nuevo: Punto de Referencia
         modalCityNeighborhoodInput.value = currentClientToEdit.cityNeighborhood || '';
-        modalDeliveryTimeInput.value = ''; // No aplica hora de entrega para editar cliente
-        modalProductNameFinalInput.value = ''; // No aplica producto final para editar cliente
-        modalClientDetailsTotalSpan.textContent = `$0`; // O el total de una Pedido previa si se está rellenando
+        modalProductDetailsInput.value = ''; // No auto-llenar detalles de producto
+        modalProductNameFinalInput.value = '';
+        modalClientDetailsTotalSpan.textContent = `$0`;
         confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
     } else {
-        // Si no estamos editando un cliente, limpiar y prellenar con datos de la orden actual
         modalClientNameInput.value = '';
         modalClientContactInput.value = '';
+        modalDeliveryDateInput.value = ''; // Resetear campo de fecha
         modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = '';
+        modalReferencePointInput.value = ''; // Resetear
         modalCityNeighborhoodInput.value = '';
+        modalProductDetailsInput.value = ''; // Resetear
         modalProductNameFinalInput.value = '';
         modalClientDetailsTotalSpan.textContent = `$${formatCurrency(currentOrderToSave.finalTotal)}`;
         confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido';
@@ -558,39 +615,42 @@ function handleSaveOrder() {
     clientDetailsModal.style.display = 'flex';
 }
 
-
 function confirmAndSaveOrder() {
     const clientName = modalClientNameInput.value.trim();
     const clientContact = modalClientContactInput.value.trim();
+    const deliveryDateStr = modalDeliveryDateInput.value;
+    const deliveryDate = deliveryDateStr ? new Date(deliveryDateStr + 'T00:00:00') : null; // Convertir a Date
     const deliveryTime = modalDeliveryTimeInput.value.trim();
     const deliveryAddress = modalDeliveryAddressInput.value.trim();
+    const referencePoint = modalReferencePointInput.value.trim(); // Nuevo
     const cityNeighborhood = modalCityNeighborhoodInput.value.trim();
+    const productDetails = modalProductDetailsInput.value.trim(); // Nuevo
     const productNameFinal = modalProductNameFinalInput.value.trim();
 
-    // Lógica para actualizar datos de cliente si estamos en modo edición
     if (currentClientToEdit) {
         if (!clientName) {
-            alert('El nombre del cliente no puede estar vacío.');
+            showToast('⚠️ El nombre del cliente no puede estar vacío.');
             return;
         }
         saveClient({
             name: clientName,
             contact: clientContact,
             address: deliveryAddress,
+            referencePoint: referencePoint, // Guardar
             cityNeighborhood: cityNeighborhood
         });
-        currentClientToEdit = null; // Resetear el estado de edición
+        currentClientToEdit = null;
         closeClientDetailsModal();
-        return; // Salir de la función ya que solo se actualizaron datos de cliente
+        showToast('✅ Cliente actualizado exitosamente.');
+        return;
     }
 
     if (!currentOrderToSave) {
         return;
     }
 
-    // Validar si hay costo de domicilio y los campos del cliente/entrega están vacíos
-    if (currentOrderToSave.deliveryCost > 0 && (!clientName || !clientContact || !deliveryAddress || !cityNeighborhood)) {
-        alert('Por favor, completa los datos del cliente y de entrega si hay costo de domicilio.');
+    if ((currentOrderToSave.deliveryCost > 0 || currentOrderToSave.laborCost > 0 || currentOrderToSave.items.length > 0 || currentOrderToSave.estimatedProfit > 0) && (!clientName || !clientContact || !deliveryAddress || !cityNeighborhood)) {
+        showToast('⚠️ Por favor, completa los datos del cliente y de entrega si hay costos o productos asociados.');
         return;
     }
 
@@ -602,25 +662,31 @@ function confirmAndSaveOrder() {
         laborCost: currentOrderToSave.laborCost,
         deliveryCost: currentOrderToSave.deliveryCost,
         totalIncrementAmount: currentOrderToSave.totalIncrementAmount,
+        estimatedProfit: currentOrderToSave.estimatedProfit, // Ya es la ganancia consolidada
+        profitPercentage: currentOrderToSave.profitPercentage,
         finalTotal: currentOrderToSave.finalTotal,
         totalBasePriceOfItems: currentOrderToSave.totalBasePriceOfItems,
         clientName: clientName,
         clientContact: clientContact,
+        deliveryDate: deliveryDate, // Nuevo
         deliveryTime: deliveryTime,
         deliveryAddress: deliveryAddress,
+        referencePoint: referencePoint, // Nuevo
         cityNeighborhood: cityNeighborhood,
+        productDetails: productDetails, // Nuevo
         productNameFinal: productNameFinal,
-        status: 'pending' // Estado inicial de la Pedido
+        status: 'pending',
+        finalProfit: currentOrderToSave.finalProfit // Guardar la ganancia consolidada
     };
     orders.push(newOrder);
     saveOrdersToLocalStorage();
 
-    // Guardar o actualizar cliente en la base de datos de clientes
-    if (clientName) { // Solo guardar cliente si se ingresó un nombre
+    if (clientName) {
         saveClient({
             name: clientName,
             contact: clientContact,
             address: deliveryAddress,
+            referencePoint: referencePoint, // Guardar
             cityNeighborhood: cityNeighborhood
         });
     }
@@ -628,12 +694,13 @@ function confirmAndSaveOrder() {
     renderOrderHistory();
     clearCalculatorInputs();
     closeClientDetailsModal();
+    showToast('✅ Pedido guardado exitosamente.');
 }
-
 
 function renderOrderHistory() {
     orderHistoryList.innerHTML = '';
-    let totalFilteredOrdersAmount = 0; // Cambiado el nombre para mayor claridad
+    let totalFilteredOrdersAmount = 0;
+    let totalFilteredProfitsAmount = 0; // Nuevo: total de ganancias filtradas
 
     const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value + 'T00:00:00') : null;
     const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value + 'T23:59:59') : null;
@@ -649,58 +716,58 @@ function renderOrderHistory() {
         return matchesDate && matchesClient && matchesOrderNumber;
     });
 
-    // Ordenar los pedidos filtrados por número de pedido de forma descendente
     filteredOrders.sort((a, b) => b.orderNumber - a.orderNumber);
 
-    // Calcular el total de todos los pedidos filtrados ANTES de aplicar la paginación
     filteredOrders.forEach(order => {
         totalFilteredOrdersAmount += order.finalTotal;
+        totalFilteredProfitsAmount += order.finalProfit || 0; // Sumar la ganancia consolidada
     });
-    filteredOrdersTotalSpan.textContent = `$${formatCurrency(totalFilteredOrdersAmount)}`; // Actualizar aquí
+    filteredOrdersTotalSpan.textContent = `$${formatCurrency(totalFilteredOrdersAmount)}`;
+    filteredProfitsTotalSpan.textContent = `$${formatCurrency(totalFilteredProfitsAmount)}`; // Mostrar ganancias filtradas
 
     if (filteredOrders.length === 0) {
         noOrdersMessage.style.display = 'block';
-        showMoreOrdersBtn.style.display = 'none'; // Ocultar el botón si no hay pedidos
+        showMoreOrdersBtn.style.display = 'none';
     } else {
         noOrdersMessage.style.display = 'none';
-        
-        // Mostrar solo los primeros ORDERS_PER_PAGE pedidos si no se ha activado "Ver Más"
+
         const ordersToShow = allOrdersVisible ? filteredOrders : filteredOrders.slice(0, ORDERS_PER_PAGE);
 
         ordersToShow.forEach(order => {
-            const displayTotalBasePriceOfItems = order.totalBasePriceOfItems !== undefined ? order.totalBasePriceOfItems : (order.finalTotal - order.laborCost - order.deliveryCost - order.totalIncrementAmount);
+            const displayTotalBasePriceOfItems = order.totalBasePriceOfItems !== undefined ? order.totalBasePriceOfItems : (order.finalTotal - (order.laborCost || 0) - (order.deliveryCost || 0) - (order.totalIncrementAmount || 0) - (order.estimatedProfit || 0));
 
             const orderCard = document.createElement('div');
             orderCard.classList.add('recorded-order-card');
             orderCard.innerHTML = `
-                <button class="delete-order-btn" data-id="${order.orderNumber}">❌</button>
+                <button class="delete-order-btn" data-id="${order.orderNumber}" aria-label="Eliminar Pedido ${order.orderNumber}">❌</button>
                 <h4>Pedido #${order.orderNumber}</h4>
-                <p><strong>Fecha:</strong> ${order.date.toLocaleString('es-CO', {
+                <p><strong>Fecha Registro:</strong> ${order.date.toLocaleString('es-CO', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                 })}</p>
-                ${order.productNameFinal ? `<p><strong>Producto Final:</strong> ${order.productNameFinal}</p>` : ''}
                 ${order.clientName ? `<p><strong>Cliente:</strong> ${order.clientName}</p>` : ''}
+                ${order.productNameFinal ? `<p><strong>Producto Final:</strong> ${order.productNameFinal}</p>` : ''}
 
                 <div class="items-list">
                     <strong>Detalle de Productos:</strong>
                     ${order.items.map(item => `
                         <div class="item-detail item-sub-detail">
                             <span>- ${item.name} x ${item.quantity}</span>
-                            <span>$${formatCurrency(item.totalBasePrice)}</span>
+                            <span>$${formatCurrency(item.basePrice)}</span>
                         </div>
                     `).join('')}
                     ${displayTotalBasePriceOfItems > 0 ? `<div class="item-detail"><span>Subtotal Productos Base:</span><span>$${formatCurrency(displayTotalBasePriceOfItems)}</span></div>` : ''}
                     ${order.totalIncrementAmount > 0 ? `<div class="item-detail"><span>Incremento (20%):</span><span>$${formatCurrency(order.totalIncrementAmount)}</span></div>` : ''}
                 </div>
                 ${order.laborCost > 0 ? `<p><strong>Mano de Obra:</strong> $${formatCurrency(order.laborCost)}</p>` : ''}
+                ${order.estimatedProfit > 0 ? `<p><strong>Ganancia Total:</strong> $${formatCurrency(order.estimatedProfit)}</p>` : ''}
                 ${order.deliveryCost > 0 ? `<p><strong>Domicilio:</strong> $${formatCurrency(order.deliveryCost)}</p>` : ''}
                 <p class="total-display">Total Cobrado: $${formatCurrency(order.finalTotal)}</p>
 
-                ${order.deliveryCost > 0 ? `<button class="delivery-info-btn" data-id="${order.orderNumber}">Info Domiciliario</button>` : ''}
+                ${order.deliveryCost > 0 || (order.clientName && order.clientContact && order.deliveryAddress && order.cityNeighborhood) ? `<button class="delivery-info-btn" data-id="${order.orderNumber}">Info Domiciliario</button>` : ''}
                 <button class="status-btn ${order.status}" data-id="${order.orderNumber}" data-status="${order.status}">
                     ${order.status === 'pending' ? 'Pendiente' : order.status === 'dispatched' ? 'Despachado' : 'Entregado'}
                 </button>
@@ -708,7 +775,6 @@ function renderOrderHistory() {
             orderHistoryList.appendChild(orderCard);
         });
 
-        // Mostrar u ocultar el botón "Ver Más Pedidos"
         if (filteredOrders.length > ORDERS_PER_PAGE && !allOrdersVisible) {
             showMoreOrdersBtn.style.display = 'block';
             showMoreOrdersBtn.textContent = `Ver Más Pedidos (${filteredOrders.length - ORDERS_PER_PAGE} ocultos)`;
@@ -723,7 +789,6 @@ function renderOrderHistory() {
     }
 }
 
-
 function addOrderHistoryEventListeners() {
     document.querySelectorAll('.delete-order-btn').forEach(button => {
         button.onclick = (e) => deleteOrder(parseInt(e.target.dataset.id));
@@ -731,7 +796,6 @@ function addOrderHistoryEventListeners() {
     document.querySelectorAll('.delivery-info-btn').forEach(button => {
         button.onclick = (e) => showDeliveryInfoModal(parseInt(e.target.dataset.id));
     });
-    // Nuevo event listener para el botón de estado
     document.querySelectorAll('.status-btn').forEach(button => {
         button.onclick = (e) => toggleOrderStatus(parseInt(e.target.dataset.id));
     });
@@ -741,22 +805,28 @@ function toggleOrderStatus(orderNumber) {
     const orderIndex = orders.findIndex(order => order.orderNumber === orderNumber);
     if (orderIndex !== -1) {
         let newStatus;
+        let statusText;
         switch (orders[orderIndex].status) {
             case 'pending':
                 newStatus = 'dispatched';
+                statusText = 'Despachado';
                 break;
             case 'dispatched':
                 newStatus = 'delivered';
+                statusText = 'Entregado';
                 break;
             case 'delivered':
-                newStatus = 'pending'; // Puedes cambiar esto si no quieres que regrese a 'pending'
+                newStatus = 'pending';
+                statusText = 'Pendiente';
                 break;
             default:
                 newStatus = 'pending';
+                statusText = 'Pendiente';
         }
         orders[orderIndex].status = newStatus;
         saveOrdersToLocalStorage();
-        renderOrderHistory(); // Volver a renderizar para que el botón actualice su texto y color
+        renderOrderHistory();
+        showToast(`🔄 Estado de Pedido #${orderNumber} actualizado a: ${statusText}.`);
     }
 }
 
@@ -765,6 +835,7 @@ function deleteOrder(orderNumber) {
         orders = orders.filter(order => order.orderNumber !== orderNumber);
         saveOrdersToLocalStorage();
         renderOrderHistory();
+        showToast(`🗑️ Pedido #${orderNumber} eliminado.`);
     }
 }
 
@@ -772,16 +843,31 @@ function clearCalculatorInputs() {
     document.querySelectorAll('#search-results input[type="number"]').forEach(input => {
         input.value = 0;
     });
+    laborCostInput.value = 0;
     deliveryCostInput.value = 0;
+    profitPercentageInput.value = 0;
     modalClientNameInput.value = '';
     modalClientContactInput.value = '';
+    modalDeliveryDateInput.value = ''; // Resetear
     modalDeliveryTimeInput.value = '';
     modalDeliveryAddressInput.value = '';
+    modalReferencePointInput.value = ''; // Resetear
     modalCityNeighborhoodInput.value = '';
+    modalProductDetailsInput.value = ''; // Resetear
     modalProductNameFinalInput.value = '';
-    calculateTotal(); // Recalcula el total para que se muestre $0
-    confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido'; // Asegurarse de que el texto del botón vuelva a su estado original
-    currentClientToEdit = null; // Restablecer el cliente en edición
+    calculateTotal();
+    confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido';
+    currentClientToEdit = null;
+}
+
+function clearAllFilters() {
+    filterStartDateInput.value = '';
+    filterEndDateInput.value = '';
+    filterClientNameInput.value = '';
+    filterOrderNumberInput.value = '';
+    allOrdersVisible = false;
+    renderOrderHistory();
+    showToast('🧹 Filtros de pedidos limpiados.');
 }
 
 // --- Funciones de Modales ---
@@ -792,9 +878,12 @@ function showDeliveryInfoModal(orderNumber) {
         deliveryModalOrderNumber.textContent = order.orderNumber;
         deliveryModalClientName.textContent = order.clientName || 'N/A';
         deliveryModalClientContact.textContent = order.clientContact || 'N/A';
+        deliveryModalDeliveryDate.textContent = order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A'; // Nuevo
         deliveryModalDeliveryTime.textContent = order.deliveryTime || 'N/A';
         deliveryModalDeliveryAddress.textContent = order.deliveryAddress || 'N/A';
+        deliveryModalReferencePoint.textContent = order.referencePoint || 'N/A'; // Nuevo
         deliveryModalCityNeighborhood.textContent = order.cityNeighborhood || 'N/A';
+        deliveryModalProductDetails.textContent = order.productDetails || 'N/A'; // Nuevo
         deliveryModalProductNameFinal.textContent = order.productNameFinal || 'N/A';
         deliveryModalFinalTotal.textContent = `$${formatCurrency(order.finalTotal)}`;
         deliveryInfoModal.style.display = 'flex';
@@ -807,7 +896,7 @@ function closeDeliveryInfoModal() {
 
 function closeClientDetailsModal() {
     clientDetailsModal.style.display = 'none';
-    clearCalculatorInputs(); // Restablecer campos del modal y estado de edición
+    clearCalculatorInputs();
 }
 
 function showClientsDbModal() {
@@ -823,41 +912,50 @@ function copyDeliveryInfoToClipboard() {
     const orderNumber = deliveryModalOrderNumber.textContent;
     const clientName = deliveryModalClientName.textContent;
     const clientContact = deliveryModalClientContact.textContent;
+    const deliveryDate = deliveryModalDeliveryDate.textContent; // Nuevo
     const deliveryTime = deliveryModalDeliveryTime.textContent;
     const deliveryAddress = deliveryModalDeliveryAddress.textContent;
+    const referencePoint = deliveryModalReferencePoint.textContent; // Nuevo
     const cityNeighborhood = deliveryModalCityNeighborhood.textContent;
+    const productDetails = deliveryModalProductDetails.textContent; // Nuevo
     const productNameFinal = deliveryModalProductNameFinal.textContent;
     const finalTotal = deliveryModalFinalTotal.textContent;
 
     const textToCopy = `
-Información para Domiciliario:
-Pedido #: ${orderNumber}
-Cliente: ${clientName}
-Contacto: ${clientContact}
-Hora de Entrega: ${deliveryTime}
-Dirección: ${deliveryAddress}
-Ciudad/Barrio: ${cityNeighborhood}
-Producto Final: ${productNameFinal}
-Valor a Cobrar: ${finalTotal}
+*Información para Domiciliario:*
+*Pedido #:* ${orderNumber}
+*Cliente:* ${clientName}
+*Contacto:* ${clientContact}
+*Fecha de Entrega:* ${deliveryDate}
+*Hora de Entrega:* ${deliveryTime}
+*Dirección:* ${deliveryAddress}
+*Punto de Referencia:* ${referencePoint}
+*Ciudad/Barrio:* ${cityNeighborhood}
+*Detalles Producto:* ${productDetails}
+*Producto Final:* ${productNameFinal}
+*Valor a Cobrar:* ${finalTotal}
     `.trim();
 
     navigator.clipboard.writeText(textToCopy)
         .then(() => {
-            alert('Información copiada al portapapeles!');
+            showToast('📋 Información copiada al portapapeles!');
         })
         .catch(err => {
             console.error('Error al copiar al portapapeles:', err);
-            alert('Error al copiar la información. Por favor, intente manualmente.');
+            showToast('❌ Error al copiar la información. Intenta manualmente.');
         });
 }
 
 function sendDeliveryInfoToWhatsapp() {
+    const clientContact = deliveryModalClientContact.textContent;
     const orderNumber = deliveryModalOrderNumber.textContent;
     const clientName = deliveryModalClientName.textContent;
-    const clientContact = deliveryModalClientContact.textContent;
+    const deliveryDate = deliveryModalDeliveryDate.textContent; // Nuevo
     const deliveryTime = deliveryModalDeliveryTime.textContent;
     const deliveryAddress = deliveryModalDeliveryAddress.textContent;
+    const referencePoint = deliveryModalReferencePoint.textContent; // Nuevo
     const cityNeighborhood = deliveryModalCityNeighborhood.textContent;
+    const productDetails = deliveryModalProductDetails.textContent; // Nuevo
     const productNameFinal = deliveryModalProductNameFinal.textContent;
     const finalTotal = deliveryModalFinalTotal.textContent;
 
@@ -866,138 +964,222 @@ function sendDeliveryInfoToWhatsapp() {
 *Pedido #:* ${orderNumber}
 *Cliente:* ${clientName}
 *Contacto:* ${clientContact}
+*Fecha de Entrega:* ${deliveryDate}
 *Hora de Entrega:* ${deliveryTime}
 *Dirección:* ${deliveryAddress}
+*Punto de Referencia:* ${referencePoint}
 *Ciudad/Barrio:* ${cityNeighborhood}
+*Detalles Producto:* ${productDetails}
 *Producto Final:* ${productNameFinal}
 *Valor a Cobrar:* ${finalTotal}
     `.trim();
 
     const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${clientContact.replace(/\D/g, '')}?text=${encodedMessage}`;
 
     window.open(whatsappUrl, '_blank');
 }
 
 // --- Función para Exportar Tablas a Excel (.xlsx) ---
-function exportTableToExcel(tableId, filename = '') {
-    const table = document.getElementById(tableId);
-    if (!table) {
-        console.error(`Tabla con ID '${tableId}' no encontrada.`);
-        return;
-    }
+function exportTableToExcel(tableId, filename = '', includeOrderDetails = false) {
+    let wb = XLSX.utils.book_new();
+    let ws;
 
-    // Clonar la tabla para no modificar la original
-    const clonedTable = table.cloneNode(true);
+    if (includeOrderDetails) {
+        const data = [
+            ["Número Pedido", "Fecha Registro", "Cliente", "Contacto", "Fecha Entrega", "Hora Entrega", "Dirección", "Punto de Referencia", "Ciudad/Barrio", "Detalle Productos (Observación)", "Producto Final (Descripción para cliente)", "Detalle Productos Listado", "Subtotal Base Productos", "Incremento (20%)", "Mano de Obra", "Ganancia Total Estimada", "Porcentaje Ganancia (%)", "Domicilio", "Total Cobrado", "Estado"]
+        ];
 
-    // Eliminar la columna de "Acciones" si existe
-    const headerRow = clonedTable.querySelector('thead tr');
-    if (headerRow) {
-        const headers = Array.from(headerRow.children);
-        let actionColumnIndex = -1;
-        for (let i = 0; i < headers.length; i++) {
-            if (headers[i].textContent.includes('Acciones')) {
-                actionColumnIndex = i;
-                break;
+        orders.forEach(order => {
+            const itemsDetail = order.items.map(item => `${item.name} x ${item.quantity} ($${formatCurrency(item.basePrice)} c/u)`).join('; ');
+            data.push([
+                order.orderNumber,
+                order.date.toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                order.clientName || 'N/A',
+                order.clientContact || 'N/A',
+                order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A', // Nuevo
+                order.deliveryTime || 'N/A',
+                order.deliveryAddress || 'N/A',
+                order.referencePoint || 'N/A', // Nuevo
+                order.cityNeighborhood || 'N/A',
+                order.productDetails || 'N/A', // Nuevo
+                order.productNameFinal || 'N/A',
+                itemsDetail,
+                order.totalBasePriceOfItems,
+                order.totalIncrementAmount,
+                order.laborCost,
+                order.estimatedProfit, // Ganancia consolidada
+                order.profitPercentage,
+                order.deliveryCost,
+                order.finalTotal,
+                order.status
+            ]);
+        });
+        ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
+
+    } else if (tableId === 'products-table') {
+        const table = document.getElementById(tableId);
+        if (!table) {
+            console.error(`Tabla con ID '${tableId}' no encontrada.`);
+            showToast(`❌ Error: Tabla con ID '${tableId}' no encontrada.`);
+            return;
+        }
+
+        const data = [];
+        const headerCells = table.querySelector('thead tr').querySelectorAll('th');
+        const headers = [];
+        for (let i = 0; i < headerCells.length - 1; i++) {
+            headers.push(headerCells[i].textContent.trim());
+        }
+        data.push(headers);
+
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const rowData = [];
+            const cells = row.querySelectorAll('td');
+            for (let i = 0; i < cells.length - 1; i++) {
+                rowData.push(cells[i].textContent.trim());
             }
+            data.push(rowData);
+        });
+
+        ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Productos");
+
+    } else if (tableId === 'clients-table') { // Nueva lógica para exportar clientes
+        const table = document.getElementById(tableId);
+        if (!table) {
+            console.error(`Tabla con ID '${tableId}' no encontrada.`);
+            showToast(`❌ Error: Tabla con ID '${tableId}' no encontrada.`);
+            return;
         }
-        if (actionColumnIndex !== -1) {
-            headerRow.deleteCell(actionColumnIndex);
-            Array.from(clonedTable.querySelectorAll('tbody tr')).forEach(row => {
-                // Asegurarse de que la fila tenga celdas antes de intentar eliminar
-                if (row.cells.length > actionColumnIndex) {
-                    row.deleteCell(actionColumnIndex);
-                }
-            });
+
+        const data = [
+            ["Nombre", "Contacto", "Dirección", "Punto de Referencia", "Ciudad/Barrio"]
+        ];
+
+        clientsDb.forEach(client => {
+            data.push([
+                client.name || 'N/A',
+                client.contact || 'N/A',
+                client.address || 'N/A',
+                client.referencePoint || 'N/A',
+                client.cityNeighborhood || 'N/A'
+            ]);
+        });
+        ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+    } else {
+        const table = document.getElementById(tableId);
+        if (!table) {
+            console.error(`Tabla con ID '${tableId}' no encontrada.`);
+            showToast(`❌ Error: Tabla con ID '${tableId}' no encontrada.`);
+            return;
         }
+        ws = XLSX.utils.table_to_sheet(table, {
+            raw: false,
+            cellDates: false
+        });
+        XLSX.utils.book_append_sheet(wb, ws, "Datos");
     }
 
-    const ws = XLSX.utils.table_to_sheet(clonedTable);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-
-    const excelFileName = filename ? `${filename}.xlsx` : 'tabla.xlsx';
+    const excelFileName = filename ? `${filename}.xlsx` : 'datos.xlsx';
     XLSX.writeFile(wb, excelFileName);
+    showToast(`📊 "${filename}" exportado exitosamente.`);
 }
 
 // --- Nueva Función para Importar Productos desde Excel (.xlsx) ---
 function importProductsFromExcel(event) {
     const file = event.target.files[0];
     if (!file) {
+        event.target.value = '';
         return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
 
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
 
-        // Convertir la hoja a un array de objetos, usando la primera fila como encabezados
-        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
 
-        if (json.length === 0) {
-            alert('El archivo Excel está vacío.');
-            return;
-        }
-
-        // Asumimos que la primera fila son los encabezados
-        const headers = json[0];
-        const productNameColumnIndex = headers.findIndex(h => h && h.toLowerCase().trim() === 'producto');
-        const productPriceColumnIndex = headers.findIndex(h => h && h.toLowerCase().trim() === 'precio unitario');
-
-        if (productNameColumnIndex === -1 || productPriceColumnIndex === -1) {
-            alert('El archivo Excel debe contener las columnas "Producto" y "Precio Unitario".');
-            return;
-        }
-
-        let productsAddedOrUpdated = 0;
-        let newNextProductId = nextProductId; // Usar una variable temporal para el siguiente ID
-
-        for (let i = 1; i < json.length; i++) { // Empezar desde la segunda fila para los datos
-            const row = json[i];
-            const name = row[productNameColumnIndex] ? String(row[productNameColumnIndex]).trim() : '';
-            const price = parseFloat(row[productPriceColumnIndex]);
-
-            if (name && !isNaN(price) && price > 0) {
-                const existingProductIndex = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
-
-                if (existingProductIndex !== -1) {
-                    // Actualizar producto existente
-                    products[existingProductIndex].price = price;
-                    productsAddedOrUpdated++;
-                } else {
-                    // Añadir nuevo producto
-                    products.push({
-                        id: `prod-${newNextProductId++}`,
-                        name: name,
-                        price: price
-                    });
-                    productsAddedOrUpdated++;
-                }
-            } else {
-                console.warn(`Saltando fila ${i + 1} debido a datos inválidos: Producto="${name}", Precio="${row[productPriceColumnIndex]}"`);
+            if (rawData.length < 2) {
+                showToast('⚠️ El archivo Excel está vacío o solo contiene encabezados.');
+                event.target.value = '';
+                return;
             }
-        }
-        nextProductId = newNextProductId; // Actualizar el ID global después de la importación
 
-        saveProductsToLocalStorage();
-        renderProductTable();
-        alert(`Se importaron ${productsAddedOrUpdated} productos (nuevos o actualizados) exitosamente.`);
-        // Limpiar el input de tipo file para que el mismo archivo pueda ser seleccionado de nuevo
-        event.target.value = '';
+            const headers = rawData[0].map(h => String(h).toLowerCase().trim());
+            const productNameColumnIndex = headers.indexOf('producto');
+            const productPriceColumnIndex = headers.indexOf('precio unitario');
+
+            if (productNameColumnIndex === -1 || productPriceColumnIndex === -1) {
+                showToast('⚠️ El archivo Excel debe contener las columnas "Producto" y "Precio Unitario".');
+                event.target.value = '';
+                return;
+            }
+
+            let productsAddedOrUpdated = 0;
+            let productsSkipped = 0;
+            let newNextProductId = nextProductId;
+
+            for (let i = 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                const name = row[productNameColumnIndex] ? String(row[productNameColumnIndex]).trim() : '';
+                const priceValue = row[productPriceColumnIndex];
+                let price = NaN;
+
+                if (typeof priceValue === 'number') {
+                    price = priceValue;
+                } else if (typeof priceValue === 'string') {
+                    price = parseFloat(priceValue.replace(/\$|,/g, ''));
+                }
+
+                if (name && !isNaN(price) && price > 0) {
+                    const existingProductIndex = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+
+                    if (existingProductIndex !== -1) {
+                        products[existingProductIndex].price = price;
+                        productsAddedOrUpdated++;
+                    } else {
+                        products.push({
+                            id: `prod-${newNextProductId++}`,
+                            name: name,
+                            price: price
+                        });
+                        productsAddedOrUpdated++;
+                    }
+                } else {
+                    console.warn(`Saltando fila ${i + 1} debido a datos inválidos: Producto="${name}", Precio="${row[productPriceColumnIndex]}"`);
+                    productsSkipped++;
+                }
+            }
+            nextProductId = newNextProductId;
+
+            saveProductsToLocalStorage();
+            renderProductTable();
+            showToast(`✅ Se importaron ${productsAddedOrUpdated} productos. (${productsSkipped} omitidos por datos inválidos)`);
+        } catch (error) {
+            console.error('Error al procesar el archivo Excel:', error);
+            showToast('❌ Hubo un error al procesar el archivo Excel. Asegúrate de que sea un formato válido.');
+        } finally {
+            event.target.value = '';
+        }
     };
 
     reader.onerror = (ex) => {
         console.error('Error al leer el archivo:', ex);
-        alert('Hubo un error al leer el archivo Excel.');
+        showToast('❌ Hubo un error al leer el archivo Excel.');
+        event.target.value = '';
     };
 
     reader.readAsArrayBuffer(file);
 }
-
 
 // --- Event Listeners y Inicialización ---
 
@@ -1007,35 +1189,38 @@ cancelEditBtn.addEventListener('click', resetProductForm);
 
 searchInput.addEventListener('input', filterAndRenderProductSelection);
 
+laborCostInput.addEventListener('input', calculateTotal);
+laborCostInput.addEventListener('change', calculateTotal);
 deliveryCostInput.addEventListener('input', calculateTotal);
 deliveryCostInput.addEventListener('change', calculateTotal);
+profitPercentageInput.addEventListener('input', calculateTotal);
+profitPercentageInput.addEventListener('change', calculateTotal);
 
 saveOrderBtn.addEventListener('click', handleSaveOrder);
 confirmSaveOrderBtn.addEventListener('click', confirmAndSaveOrder);
 
-// Event listeners para los filtros de fecha y texto
 filterStartDateInput.addEventListener('change', () => {
-    allOrdersVisible = false; // Resetear al cambiar filtros
+    allOrdersVisible = false;
     renderOrderHistory();
 });
 filterEndDateInput.addEventListener('change', () => {
-    allOrdersVisible = false; // Resetear al cambiar filtros
+    allOrdersVisible = false;
     renderOrderHistory();
 });
 filterClientNameInput.addEventListener('input', () => {
-    allOrdersVisible = false; // Resetear al cambiar filtros
+    allOrdersVisible = false;
     renderOrderHistory();
 });
 filterOrderNumberInput.addEventListener('input', () => {
-    allOrdersVisible = false; // Resetear al cambiar filtros
+    allOrdersVisible = false;
     renderOrderHistory();
 });
+clearFiltersBtn.addEventListener('click', clearAllFilters);
 
 showMoreOrdersBtn.addEventListener('click', () => {
-    allOrdersVisible = !allOrdersVisible; // Cambiar el estado
-    renderOrderHistory(); // Volver a renderizar con el nuevo estado
+    allOrdersVisible = !allOrdersVisible;
+    renderOrderHistory();
 });
-
 
 modalClientNameInput.addEventListener('input', autoFillClientDetails);
 
@@ -1060,14 +1245,40 @@ window.addEventListener('click', (event) => {
 copyToClipboardBtn.addEventListener('click', copyDeliveryInfoToClipboard);
 sendToWhatsappBtn.addEventListener('click', sendDeliveryInfoToWhatsapp);
 
-// Nuevos event listeners para los botones de exportar e importar
 exportProductsBtn.addEventListener('click', () => exportTableToExcel('products-table', 'productos'));
-exportClientsBtn.addEventListener('click', () => exportTableToExcel('clients-table', 'clientes'));
+exportOrdersBtn.addEventListener('click', () => exportTableToExcel(null, 'pedidos_registrados', true));
+exportClientsBtn.addEventListener('click', () => exportTableToExcel('clients-table', 'clientes')); // Event listener para el nuevo botón
 
 importProductsBtn.addEventListener('click', () => {
-    importProductsFile.click(); // Simula el click en el input file oculto
+    importProductsFile.click();
 });
 importProductsFile.addEventListener('change', importProductsFromExcel);
+
+// --- Funciones de Tabs ---
+function setupTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
+
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            button.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
+
+            // Recalcular y renderizar al cambiar de pestaña si es necesario
+            if (targetTab === 'order-calculator') {
+                filterAndRenderProductSelection();
+                calculateTotal();
+            } else if (targetTab === 'order-history') {
+                renderOrderHistory();
+            }
+        });
+    });
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1075,8 +1286,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOrdersFromLocalStorage();
     loadClientsFromLocalStorage();
 
-    renderProductTable();
-    filterAndRenderProductSelection();
-    calculateTotal();
-    renderOrderHistory();
+    renderProductTable(); // Renderiza la tabla de productos
+    filterAndRenderProductSelection(); // Renderiza los productos seleccionables en la calculadora
+    calculateTotal(); // Calcula el total inicial (debería ser 0 si no hay nada)
+    renderOrderHistory(); // Renderiza el historial de pedidos
+
+    setupTabs(); // Configura la lógica de las pestañas
 });

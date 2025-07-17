@@ -1,814 +1,795 @@
-:root {
-    --primary-pink: #FF69B4; /* Rosa claro */
-    --dark-pink: #FF69B4;    /* Rosa fuerte */
-    --white: #FFFFFF;
-    --gray: #F8F8F8;
-    --dark-gray: #333333;
-    --text-color: #555555;
-    /* TODOS los botones ahora usarán la variable --button-general */
-    --button-general: #FF69B4; /* Unificamos el color rosa para todos los botones */
-    --button-cancel: #FF69B4; /* Gris para 'Cancelar' */
-    --whatsapp-green: #FF69B4; /* Color de WhatsApp */
-
-    /* Colores para el botón de estado de envío */
-    --status-pending: #FFA500; /* Naranja */
-    --status-dispatched: #1E90FF; /* Azul */
-    --status-delivered: #28a745; /* Verde */
-}
-
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: var(--gray);
-    color: var(--text-color);
+    padding: 20px;
+    background-color: #F8F4F8; /* Blanco rosado muy claro */
+    color: #4A4A4A; /* Gris oscuro suave para el texto principal */
     line-height: 1.6;
 }
 
 .container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: var(--white);
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    max-width: 900px;
+    margin: 20px auto;
+    background-color: #FFFFFF; /* Blanco puro para el contenedor principal */
+    padding: 30px;
+    border-radius: 15px; /* Bordes más redondeados */
+    box-shadow: 0 6px 20px rgba(220, 180, 200, 0.3); /* Sombra suave en tono rosa pastel */
 }
 
-h2 {
-    font-family: 'Playfair Display', serif;
-    text-align: center;
-    color: var(--dark-pink);
-    margin-bottom: 30px;
-    font-size: 2.5em;
-}
-
-h3 {
-    font-family: 'Playfair Display', serif;
-    color: var(--dark-pink);
+h1, h2, h3 {
+    color: #DDA0DD; /* Lila medio para encabezados */
     text-align: center;
     margin-bottom: 20px;
-    font-size: 1.8em;
+    font-weight: 700; /* Más énfasis en los títulos */
 }
 
-/* Estilos específicos para la calculadora y la tabla dinámica */
-#calculator-section {
+/* --- Pestañas --- */
+.tab-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    margin-top: 30px;
     justify-content: center;
-}
-
-#product-list-container, #order-summary-container {
-    background-color: var(--white);
+    margin-bottom: 30px;
+    background-color: #F8E8F8; /* Rosa muy claro para el fondo de las pestañas */
     border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-    padding: 25px;
-    flex: 1;
-    min-width: 300px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(220, 180, 200, 0.2);
 }
 
+.tab-button {
+    background-color: #F8E8F8; /* Fondo del botón de pestaña */
+    border: none;
+    padding: 12px 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    color: #B06A9C; /* Rosa oscuro para el texto de la pestaña */
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    text-align: center;
+}
 
-/* Estilo para la barra de búsqueda */
-#productSearch {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.tab-button:hover {
+    background-color: #F0D0E0; /* Rosa un poco más oscuro al pasar el ratón */
+    color: #9C528B; /* Texto un poco más oscuro */
+}
+
+.tab-button.active {
+    background-color: #E6B9CD; /* Rosa pastel para la pestaña activa */
+    color: #FFFFFF; /* Texto blanco en la pestaña activa */
+    box-shadow: 0 4px 10px rgba(220, 180, 200, 0.4);
+    transform: translateY(-3px);
+}
+
+.tab-content {
+    display: none;
+    padding: 20px 0;
+    border-top: 1px solid #F5E6F5; /* Borde superior suave */
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* --- Elementos Generales de Formulario y Botones --- */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+textarea {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #E0B0C0; /* Borde rosa pastel */
+    border-radius: 8px; /* Más redondeado */
     font-size: 1em;
     box-sizing: border-box;
+    color: #555555; /* Texto del input */
 }
 
+button {
+    background-color: #E6B9CD; /* Rosa pastel para botones primarios */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.05em;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Ajuste para espaciar los botones en product-form */
+.product-form button {
+    margin-right: 10px; /* Margen a la derecha para separar botones */
+}
+.product-form button:last-child {
+    margin-right: 0; /* Eliminar margen del último botón */
+}
+
+
+button:hover:not(:disabled) {
+    background-color: #DDA0DD; /* Rosa lila más oscuro al pasar el ratón */
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    background-color: #E0E0E0; /* Gris claro para botones deshabilitados */
+    color: #A0A0A0; /* Gris para el texto deshabilitado */
+    cursor: not-allowed;
+}
+
+.action-btn {
+    background-color: #C1E1C1; /* Verde pastel suave para acciones como exportar/importar */
+    color: #4CAF50; /* Texto verde más oscuro */
+}
+
+.action-btn:hover:not(:disabled) {
+    background-color: #B0D9B0; /* Verde más oscuro al pasar el ratón */
+}
+
+.product-form, .calculator-inputs, .filters {
+    background-color: #F8E8F8; /* Rosa muy claro para formularios/filtros */
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 2px 5px rgba(220, 180, 200, 0.2);
+}
+
+.product-actions {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* --- Tabla de Gestión de Productos --- */
 #products-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 #products-table th, #products-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
+    border: 1px solid #F5E6F5; /* Borde de tabla suave */
+    padding: 12px;
     text-align: left;
 }
 
 #products-table th {
-    background-color: var(--primary-pink);
-    color: var(--white);
-    font-weight: bold;
+    background-color: #DDA0DD; /* Lila medio para el encabezado de la tabla */
+    color: white;
+    font-weight: 600;
 }
 
-#products-table tbody tr:nth-child(even) {
-    background-color: var(--gray);
+#products-table tr:nth-child(even) {
+    background-color: #FCF4FC; /* Rosa muy pálido para filas pares */
 }
 
-#products-table td button {
-    background-color: var(--button-general); /* Usamos la nueva variable */
-    color: var(--white);
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-right: 5px;
-    transition: background-color 0.3s ease;
+#products-table tr:hover {
+    background-color: #F0E0F0; /* Rosa pálido al pasar el ratón */
 }
 
-/* Removidos estilos específicos para .edit-btn, .delete-btn para unificar color */
-#products-table td button:hover {
-    opacity: 0.9;
+#products-table .edit-btn {
+    background-color: #FFDAB9; /* Melocotón suave */
+    color: #A0522D; /* Marrón para texto */
+    margin-right: 8px;
+    padding: 8px 15px;
+}
+
+#products-table .edit-btn:hover {
+    background-color: #FFC0CB; /* Rosa más intenso */
+}
+
+#products-table .delete-btn {
+    background-color: #FFC0CB; /* Rosa claro para eliminar */
+    color: #B22222; /* Rojo oscuro para texto */
+    padding: 8px 15px;
+}
+
+#products-table .delete-btn:hover {
+    background-color: #FF9AA2;
+}
+
+/* --- Calculadora de Pedidos --- */
+.calculator-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: flex-start;
+}
+
+.search-section {
+    position: relative;
+}
+
+#productSearch {
+    width: 100%;
+}
+
+.product-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .product-item {
+    background-color: #FFFFFF;
+    border: 1px solid #F0D0E0; /* Borde rosa suave */
+    border-radius: 8px;
+    padding: 12px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px dashed #eee;
-}
-
-.product-item:last-child {
-    border-bottom: none;
+    text-align: center;
+    font-size: 0.95em;
+    box-shadow: 0 2px 5px rgba(220, 180, 200, 0.1);
 }
 
 .product-item label {
+    margin-bottom: 8px;
     font-weight: bold;
-    flex-grow: 1;
-    color: var(--dark-gray);
+    color: #8B637D; /* Rosa oscuro para etiquetas */
 }
 
 .product-item input[type="number"] {
-    width: 60px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    width: 75px;
+    padding: 6px;
     text-align: center;
-    -moz-appearance: textfield; /* Para Firefox */
+    margin-bottom: 0;
+    border: 1px solid #E6B9CD; /* Borde de input de cantidad */
 }
 
-.product-item input[type="number"]::-webkit-outer-spin-button,
-.product-item input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+.cost-inputs {
+    display: flex;
+    flex-direction: column;
+}
+
+.cost-inputs label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #8B637D; /* Rosa oscuro para etiquetas de costo */
+}
+
+.cost-inputs input {
+    margin-bottom: 18px;
+}
+
+.selected-products-summary {
+    background-color: #FCF4FC; /* Rosa muy pálido para el resumen */
+    border: 1px solid #E6B9CD; /* Borde rosa pastel */
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    max-height: 280px;
+    overflow-y: auto;
 }
 
 .order-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dotted #eee;
+    padding: 10px 0;
+    border-bottom: 1px dashed #F0D0E0; /* Línea discontinua rosa suave */
 }
 
-.order-item:last-of-type {
+.order-item:last-child {
     border-bottom: none;
 }
 
-.order-item .remove-item {
-    background: none;
-    border: none;
-    color: var(--dark-pink);
-    font-size: 1.2em;
-    cursor: pointer;
+.order-item span:first-child {
+    flex-grow: 1;
+    font-weight: 500;
+    color: #6A5ACD; /* Azul lavanda para los detalles del item */
+}
+
+.order-item span:last-child {
+    font-weight: bold;
+    color: #DDA0DD; /* Lila para precios individuales */
     margin-left: 10px;
 }
 
-.order-item .remove-item:hover {
-    color: #e04a9e;
+.remove-item {
+    background-color: transparent;
+    border: none;
+    color: #FF69B4; /* Rosa fuerte para el icono de eliminar */
+    font-size: 1.3em;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.total-row {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 2px solid var(--dark-pink);
-    font-size: 1.3em;
-    font-weight: bold;
+.remove-item::after {
+    content: '✖';
+}
+
+.remove-item:hover {
+    color: #FF1493; /* Rosa más intenso al pasar el ratón */
+    background-color: transparent;
+}
+
+.final-total {
     display: flex;
     justify-content: space-between;
-    color: var(--dark-pink);
-}
-
-.input-group {
+    font-size: 1.4em;
+    font-weight: bold;
+    padding: 12px 0;
+    border-top: 2px solid #DDA0DD; /* Borde lila para el total */
     margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
 }
 
-.input-group:first-of-type {
-    border-top: none;
-    margin-top: 0;
-    padding-top: 0;
+.final-total:last-of-type {
+    color: #8B008B; /* Púrpura oscuro para el total final más importante */
+    font-size: 1.6em;
+    border-top: 2px solid #8B008B;
 }
 
-.input-group label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: var(--dark-gray);
-}
-
-.input-group input[type="text"],
-.input-group input[type="number"],
-.input-group input[type="time"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1.1em;
-    box-sizing: border-box;
-    -moz-appearance: textfield;
-}
-
-.input-group input[type="number"]::-webkit-outer-spin-button,
-.input-group input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.add-product-form {
-    background-color: var(--gray);
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
-}
-
-.add-product-form div {
-    margin-bottom: 15px;
-}
-
-.add-product-form label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.add-product-form input[type="text"],
-.add-product-form input[type="number"] {
-    width: calc(100% - 22px);
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1em;
-}
-
-.add-product-form button {
-    color: var(--white);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-    width: 100%;
-}
-
-/* Todos los botones del formulario de añadir producto ahora usan --button-general, excepto cancelar */
-.add-product-form button#addProductBtn,
-.add-product-form button#updateProductBtn {
-    background-color: var(--button-general);
-}
-
-.add-product-form button#cancelEditBtn {
-    background-color: var(--button-cancel);
-}
-
-.add-product-form button:hover {
-    opacity: 0.9;
-}
-
-#saveOrderBtn {
-    background-color: var(--button-general); /* Unificado */
-    color: var(--white);
-    border: none;
-    padding: 12px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold;
-    width: 100%;
-    margin-top: 20px;
-    transition: background-color 0.3s ease;
-}
-
-#saveOrderBtn:hover {
-    opacity: 0.9;
-}
-
-/* Estilos para los botones de acción como "Ver Clientes" y "Exportar" */
-.table-actions {
-    display: flex;
-    justify-content: flex-end; /* Alinea los elementos a la derecha */
-    gap: 10px; /* Espacio entre botones */
-    margin-bottom: 20px; /* Espacio debajo de los botones */
-    flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas pequeñas */
-}
-
-.action-button {
-    background-color: var(--button-general);
-    color: var(--white);
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.action-button:hover {
-    opacity: 0.9;
-}
-
-/* Estilos específicos para el botón "Exportar" */
-.export-button {
-    background-color: #FF69B4; /* Un verde distintivo para exportar */
-}
-
-.export-button:hover {
-    background-color: #FF69B4;
-}
-
-/* Nuevo estilo para el botón "Importar" */
-.import-button {
-    background-color: #FF69B4; /* Un azul distintivo para importar */
-}
-
-.import-button:hover {
-    background-color: #FF69B4;
-}
-
-
-/* Estilos para la sección de Registro de Órdenes */
-#order-history-section {
-    margin-top: 50px;
-    padding-top: 30px;
-    border-top: 2px solid var(--primary-pink);
-    text-align: center;
-}
-
-#order-history-list {
-    margin-top: 20px;
+/* --- Historial de Pedidos --- */
+.filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.filters input {
+    flex: 1;
+    min-width: 140px;
+    margin-bottom: 0;
+}
+
+.filters button {
+    margin-bottom: 0;
+}
+
+.order-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Tarjetas más pequeñas */
+    gap: 20px; /* Reducir el espacio entre tarjetas */
+    margin-top: 25px;
 }
 
 .recorded-order-card {
-    background-color: var(--white);
-    border: 1px solid var(--primary-pink);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    width: calc(33% - 20px);
-    min-width: 280px;
-    box-sizing: border-box;
-    text-align: left;
+    background-color: #FFFFFF;
+    border: 1px solid #E6B9CD; /* Borde rosa pastel para tarjetas de pedido */
+    border-radius: 12px;
+    padding: 15px; /* Reducir padding */
+    box-shadow: 0 4px 15px rgba(220, 180, 200, 0.2);
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    overflow: hidden;
 }
 
 .recorded-order-card h4 {
-    font-family: 'Playfair Display', serif;
-    color: var(--dark-pink);
     margin-top: 0;
     margin-bottom: 10px;
-    font-size: 1.4em;
+    color: #E6B9CD; /* Rosa pastel para el número de pedido */
+    font-weight: 700;
+    font-size: 1.1em; /* Ajustar tamaño de fuente */
 }
 
 .recorded-order-card p {
-    margin: 5px 0;
-    font-size: 0.95em;
-    color: var(--text-color);
+    margin: 3px 0; /* Reducir margen entre párrafos */
+    font-size: 0.85em; /* Fuente ligeramente más pequeña */
+    color: #555555;
+}
+
+.recorded-order-card strong {
+    color: #8B637D; /* Rosa oscuro para etiquetas en la tarjeta */
 }
 
 .recorded-order-card .items-list {
-    border-top: 1px dashed #eee;
-    margin-top: 10px;
-    padding-top: 10px;
-    font-size: 0.9em;
+    margin-top: 10px; /* Reducir margen superior */
+    padding-top: 10px; /* Reducir padding superior */
+    border-top: 1px dashed #F0D0E0; /* Línea discontinua rosa suave */
 }
 
-.recorded-order-card .item-detail {
+.item-detail {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 3px;
+    font-size: 0.82em; /* Fuente más pequeña para detalles de item */
+    margin-bottom: 2px;
+    padding-left: 6px;
 }
 
-.recorded-order-card .item-sub-detail {
-    font-size: 0.85em;
-    color: #777;
-    margin-left: 15px;
+.item-sub-detail {
+    color: #7A67EE; /* Azul-púrpura suave para detalles de precio de item */
 }
 
 .recorded-order-card .total-display {
+    font-size: 1.1em; /* Fuente más pequeña para total en tarjeta */
     font-weight: bold;
-    font-size: 1.1em;
-    color: var(--dark-pink);
-    border-top: 1px solid var(--dark-pink);
-    padding-top: 10px;
-    margin-top: 10px;
-    text-align: right;
+    color: #8B008B; /* Púrpura oscuro para el total en tarjeta */
+    margin-top: 12px; /* Reducir margen superior */
+    padding-top: 8px; /* Reducir padding superior */
+    border-top: 2px solid #8B008B;
 }
 
-.recorded-order-card .delete-order-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: var(--button-general); /* Unificado */
-    color: white;
+.delete-order-btn {
+    background-color: #FFC0CB; /* Rosa claro para el botón de eliminar pedido */
+    color: #B22222; /* Rojo oscuro */
     border: none;
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    font-size: 0.8em;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s ease;
-}
-
-.recorded-order-card .delete-order-btn:hover {
-    opacity: 0.9;
-}
-
-.recorded-order-card .delivery-info-btn {
-    background-color: var(--button-general); /* Unificado */
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
+    width: 30px; /* Tamaño más pequeño */
+    height: 30px; /* Tamaño más pequeño */
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
-    width: 100%; /* Asegura que el botón ocupe todo el ancho */
-    box-sizing: border-box; /* Incluir padding en el ancho total */
-}
-
-.recorded-order-card .delivery-info-btn:hover {
-    opacity: 0.9;
-}
-
-.recorded-order-card .delivery-info-btn img {
-    display: none; /* Oculta la imagen si aún existe en el HTML */
-}
-
-/* Nuevo estilo para el botón de estado de envío */
-.recorded-order-card .status-btn {
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
+    font-size: 0.8em; /* Ajustar fuente */
     cursor: pointer;
-    font-size: 0.9em;
-    font-weight: bold;
-    margin-top: 10px; /* Espacio entre este y el botón de domicilio */
-    transition: background-color 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
-    text-transform: uppercase;
+    position: absolute;
+    top: 10px; /* Ajustar posición */
+    right: 10px; /* Ajustar posición */
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(220, 180, 200, 0.3);
 }
 
-.recorded-order-card .status-btn.pending {
-    background-color: var(--status-pending);
+.delete-order-btn:hover {
+    background-color: #FF9AA2;
 }
 
-.recorded-order-card .status-btn.dispatched {
-    background-color: var(--status-dispatched);
+.delivery-info-btn {
+    background-color: #ADD8E6; /* Azul claro pastel para info domiciliario */
+    color: #4682B4; /* Azul oscuro para texto */
+    margin-top: 8px; /* Reducir margen superior */
+    width: auto;
+    padding: 6px 12px; /* Reducir padding */
+    font-size: 0.85em; /* Fuente más pequeña */
 }
 
-.recorded-order-card .status-btn.delivered {
-    background-color: var(--status-delivered);
+.delivery-info-btn:hover {
+    background-color: #A0D0E0;
 }
 
-.recorded-order-card .status-btn:hover {
-    opacity: 0.9;
-}
-
-
-/* Estilos para los controles de filtro de órdenes */
-.filter-controls {
-    display: flex;
-    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: var(--gray);
+.status-btn {
+    margin-top: 8px; /* Reducir margen superior */
+    padding: 6px 12px; /* Reducir padding */
     border-radius: 8px;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.03);
-    gap: 15px; /* Espacio entre los grupos de filtro */
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    flex: 1; /* Permite que los grupos crezcan y se encojan */
-    min-width: 150px; /* Ancho mínimo para cada campo */
-}
-
-.filter-controls label {
     font-weight: bold;
-    color: var(--text-color);
-    margin-bottom: 5px; /* Espacio entre label e input */
-    text-align: left;
-}
-
-.filter-controls input[type="date"],
-.filter-controls input[type="text"],
-.filter-controls input[type="number"] {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1em;
-    background-color: var(--white);
-    width: 100%; /* Asegura que el input ocupe todo el ancho del grupo */
-    box-sizing: border-box;
-}
-
-.filter-controls input:focus {
-    outline: none;
-    border-color: var(--primary-pink);
-    box-shadow: 0 0 5px rgba(255, 105, 180, 0.3);
-}
-
-.total-summary {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: var(--dark-pink);
-    margin-top: 10px; /* Espacio si se envuelve en una nueva línea */
-    width: 100%; /* Ocupa todo el ancho cuando se envuelve */
-    text-align: right;
-}
-
-/* Estilos para el botón "Ver Más Pedidos" */
-#showMoreOrdersBtn {
-    background-color: var(--button-general); /* Usa el color general de los botones */
-    color: var(--white);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    width: auto;
     cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    margin-top: 20px;
-    transition: background-color 0.3s ease;
-    display: block; /* Asegura que el botón ocupe su propia línea */
-    margin-left: auto; /* Centra el botón */
-    margin-right: auto; /* Centra el botón */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 0.85em; /* Fuente más pequeña */
 }
 
-#showMoreOrdersBtn:hover {
-    opacity: 0.9;
+.status-btn.pending {
+    background-color: #FFFACD; /* Amarillo limón pastel */
+    color: #DAA520; /* Dorado para texto */
+    border: 1px solid #FFD700;
 }
 
+.status-btn.pending:hover {
+    background-color: #FFECB3;
+}
 
-/* Estilos para Modals */
+.status-btn.dispatched {
+    background-color: #C1E1C1; /* Verde pastel suave */
+    color: #4CAF50; /* Verde más oscuro */
+    border: 1px solid #8BC34A;
+}
+
+.status-btn.dispatched:hover {
+    background-color: #B0D9B0;
+}
+
+.status-btn.delivered {
+    background-color: #DDA0DD; /* Lila medio */
+    color: #FFFFFF; /* Blanco para texto */
+    border: 1px solid #9932CC;
+}
+
+.status-btn.delivered:hover {
+    background-color: #CC99CC;
+}
+
+.info-message {
+    text-align: center;
+    color: #B06A9C; /* Rosa oscuro para mensajes informativos */
+    font-style: italic;
+    margin-top: 30px;
+    padding: 18px;
+    background-color: #F8E8F8; /* Rosa muy claro */
+    border-radius: 10px;
+    border: 1px dashed #E6B9CD;
+}
+
+/* --- Modales --- */
 .modal {
-    display: none; /* Asegura que el modal esté oculto por defecto */
+    display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 1000; /* Asegura que esté por encima de todo */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-    align-items: center;
+    background-color: rgba(0,0,0,0.4); /* Fondo semi-transparente */
     justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
-    background-color: var(--white);
+    background-color: #FFFFFF;
     margin: auto;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(220, 180, 200, 0.4);
     width: 90%;
-    max-width: 500px; /* Ancho predeterminado para la mayoría de los modales */
+    max-width: 550px; /* Tamaño estándar para la mayoría de modales */
     position: relative;
-    text-align: left;
-    transform: translateY(-50px);
-    animation: fadeIn 0.3s forwards;
+    animation: fadeIn 0.4s ease-out;
 }
 
-/* Estilo específico para el modal de la base de datos de clientes */
-#clientsDbModal .modal-content {
-    max-width: 800px; /* Haz este modal más ancho */
+/* Estilo específico para el modal de Base de Datos de Clientes */
+.clients-db-modal-content {
+    max-width: 800px; /* Hacer el modal más ancho para la tabla de clientes */
+    max-height: 90vh; /* Limitar la altura para evitar que se salga de la pantalla */
+    display: flex;
+    flex-direction: column;
+}
+
+.clients-table-container {
+    overflow-x: auto; /* Permite scroll horizontal si la tabla es muy ancha */
+    overflow-y: auto; /* Permite scroll vertical si hay muchas filas */
+    max-height: calc(90vh - 200px); /* Ajusta la altura máxima para que quepa dentro del modal */
+    padding-right: 10px; /* Para evitar que el scrollbar tape el contenido */
 }
 
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-50px); }
+    from { opacity: 0; transform: translateY(-30px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-
-.modal-content h3 {
-    color: var(--dark-pink);
-    margin-top: 0;
-    font-size: 1.8em;
+.modal-content h2 {
     text-align: center;
-    margin-bottom: 20px;
+    color: #DDA0DD;
+    margin-bottom: 30px;
 }
 
-.modal-content p {
-    font-size: 1.1em;
+.modal-content label {
+    display: block;
     margin-bottom: 10px;
-}
-
-.modal-content p strong {
-    color: var(--dark-gray);
-}
-
-.modal-content .modal-total {
-    font-size: 1.4em;
     font-weight: bold;
-    color: var(--dark-pink);
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 2px solid var(--primary-pink);
-    text-align: right;
+    color: #8B637D;
 }
 
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="date"],
+.modal-content textarea {
+    width: calc(100% - 24px); /* Ajuste para padding */
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid #E6B9CD;
+    border-radius: 8px;
+    font-size: 1.05em;
+    box-sizing: border-box;
+}
+
+.modal-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5em;
     font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    cursor: pointer;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: #333;
-    text-decoration: none;
+    padding: 18px 0;
+    border-top: 2px solid #E0B0C0;
+    margin-top: 25px;
+    color: #8B008B;
 }
 
 .modal-content button {
-    background-color: var(--button-general); /* Unificado */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
     width: 100%;
-    margin-top: 20px; /* Separación entre botones */
-    transition: background-color 0.3s ease;
-}
-
-.modal-content button:first-of-type {
-    margin-top: 20px; /* Asegura el margen superior para el primer botón si hay varios */
-}
-
-/* Estilo específico para el botón de WhatsApp */
-.modal-content button#sendToWhatsappBtn {
-    background-color: var(--whatsapp-green);
-    margin-top: 10px; /* Un poco menos de margen que el primero */
-}
-
-.modal-content button#confirmSaveOrderBtn { /* También usa el general */
-    background-color: var(--button-general);
+    padding: 14px;
+    font-size: 1.15em;
+    margin-top: 25px;
+    background-color: #E6B9CD;
+    color: white;
+    border-radius: 8px;
 }
 
 .modal-content button:hover {
-    opacity: 0.9;
+    background-color: #DDA0DD;
 }
 
-/* Estilos para la tabla de clientes en el modal */
+.client-modal-close, .delivery-modal-close, .clients-db-modal-close {
+    color: #B06A9C; /* Rosa oscuro para el botón de cerrar */
+    position: absolute;
+    top: 18px;
+    right: 25px;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.client-modal-close:hover,
+.client-modal-close:focus,
+.delivery-modal-close:hover,
+.delivery-modal-close:focus,
+.clients-db-modal-close:hover,
+.clients-db-modal-close:focus {
+    color: #FF69B4; /* Rosa fuerte al pasar el ratón */
+    text-decoration: none;
+}
+
+#deliveryInfoModal .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+#deliveryInfoModal .modal-actions button {
+    width: 48%;
+    margin-top: 0;
+    padding: 12px;
+}
+
+#deliveryInfoModal .modal-actions button:first-child {
+    background-color: #D8BFD8; /* Lavanda para copiar */
+    color: #6A5ACD;
+}
+
+#deliveryInfoModal .modal:first-child:hover {
+    background-color: #C8A2C8;
+}
+
+#deliveryInfoModal .modal-actions button:last-child {
+    background-color: #C1E1C1; /* Verde pastel para WhatsApp */
+    color: #4CAF50;
+}
+
+#deliveryInfoModal .modal-actions button:last-child:hover {
+    background-color: #B0D9B0;
+}
+
+/* Toast Notification */
+.toast {
+    visibility: hidden;
+    min-width: 280px;
+    background-color: #333333; /* Fondo oscuro para contraste */
+    color: #FFFFFF;
+    text-align: center;
+    border-radius: 8px;
+    padding: 18px;
+    position: fixed;
+    z-index: 1001; /* Por encima de los modales */
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    font-size: 1.05em;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.toast.show {
+    visibility: visible;
+    -webkit-animation: fadeInToast 0.5s, fadeOutToast 0.5s 2.5s;
+    animation: fadeInToast 0.5s, fadeOutToast 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadeInToast {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 40px; opacity: 1;}
+}
+
+@keyframes fadeInToast {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 40px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeOutToast {
+    from {bottom: 40px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeOutToast {
+    from {bottom: 40px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+/* Estilo para tabla de Clientes (similar a productos) */
 #clients-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    font-size: 0.9em; /* Reducir fuente para que quepa más */
 }
 
 #clients-table th, #clients-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    border: 1px solid #F5E6F5;
+    padding: 8px 10px; /* Reducir padding */
     text-align: left;
-    font-size: 0.9em;
 }
 
 #clients-table th {
-    background-color: var(--primary-pink);
-    color: var(--white);
+    background-color: #DDA0DD;
+    color: white;
 }
 
-#clients-table tbody tr:nth-child(even) {
-    background-color: var(--gray);
+#clients-table tr:nth-child(even) {
+    background-color: #FCF4FC;
 }
 
-/* Estilos para los botones de Editar y Eliminar en la tabla de clientes */
+#clients-table tr:hover {
+    background-color: #F0E0F0;
+}
+
 #clients-table .edit-client-btn,
 #clients-table .delete-client-btn {
-    background-color: var(--button-general);
-    color: white;
-    border: none;
-    padding: 6px 10px; /* Aumentado el padding para hacerlos más grandes */
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 0.85em; /* Ajustado el tamaño de fuente */
-    transition: background-color 0.3s ease;
-    margin-right: 5px; /* Espacio entre los botones */
-    min-width: 70px; /* Ancho mínimo para uniformar */
-    text-align: center;
-    box-sizing: border-box; /* Incluir padding y border en el ancho total */
+    padding: 6px 10px; /* Reducir padding de botones */
+    font-size: 0.85em; /* Reducir fuente de botones */
+    margin: 2px; /* Margen pequeño entre botones */
+}
+
+#clients-table .edit-client-btn {
+    background-color: #FFDAB9;
+    color: #A0522D;
+}
+
+#clients-table .edit-client-btn:hover {
+    background-color: #FFC0CB;
 }
 
 #clients-table .delete-client-btn {
-    background-color: #FF69B4; /* Un color distinto para eliminar si se desea */
+    background-color: #FFC0CB;
+    color: #B22222;
 }
 
-
-#clients-table .edit-client-btn:hover,
 #clients-table .delete-client-btn:hover {
-    opacity: 0.9;
+    background-color: #FF9AA2;
 }
 
 
-/* Media queries existentes */
+/* Ajustes Responsivos */
 @media (max-width: 768px) {
-    .recorded-order-card {
-        width: calc(50% - 15px);
-    }
-    #clientsDbModal .modal-content {
-        max-width: 90%; /* Ajuste para pantallas más pequeñas */
-    }
-    #clients-table th, #clients-table td {
-        font-size: 0.75em; /* Fuente más pequeña para que quepa mejor */
-        padding: 6px;
-    }
-    #clients-table .edit-client-btn,
-    #clients-table .delete-client-btn {
-        padding: 4px 6px;
-        min-width: 55px;
-    }
-    /* Ajuste para los nuevos botones en pantallas pequeñas */
-    .recorded-order-card .delivery-info-btn,
-    .recorded-order-card .status-btn {
-        padding: 6px 8px; /* Reducir padding */
-        font-size: 0.8em; /* Reducir fuente */
+    .container {
+        padding: 15px;
     }
 
-    .filter-controls {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .tab-button {
+        font-size: 14px;
+        padding: 10px 15px;
     }
-    .filter-group {
-        width: 100%;
-        min-width: auto;
+
+    .calculator-inputs {
+        grid-template-columns: 1fr;
     }
-    .filter-controls label,
-    .filter-controls input {
-        width: 100%;
-        text-align: left;
-    }
-    .total-summary {
-        text-align: left;
-    }
-    .table-actions {
+
+    .filters {
         flex-direction: column;
         align-items: stretch;
     }
-}
 
-@media (max-width: 600px) {
-    #calculator-section {
+    .filters input,
+    .filters button {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .product-item input[type="number"] {
+        width: 65px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .clients-db-modal-content {
+        max-width: 95%; /* Asegura que en móviles también se adapte */
+    }
+
+    #deliveryInfoModal .modal-actions {
         flex-direction: column;
     }
-    #clients-table th, #clients-table td {
-        font-size: 0.7em; /* Aún más pequeña en móviles */
-        padding: 4px;
-    }
-    #clients-table .edit-client-btn,
-    #clients-table .delete-client-btn {
-        padding: 3px 5px;
-        min-width: 45px;
-        margin-right: 2px;
-    }
-}
 
-@media (max-width: 480px) {
-    .recorded-order-card {
+    #deliveryInfoModal .modal-actions button {
         width: 100%;
     }
 }
