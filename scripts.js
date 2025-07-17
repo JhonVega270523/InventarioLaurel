@@ -1293,3 +1293,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupTabs(); // Configura la lógica de las pestañas
 });
+
+// --- Bloqueo de Funciones de Desarrollador ---
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showToast('🚫 Clic derecho deshabilitado.');
+});
+
+document.addEventListener('keydown', function(e) {
+    // Bloquear Ctrl+U
+    if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault();
+        showToast('🚫 Ctrl+U deshabilitado.');
+    }
+    // Bloquear Fn+F12 (o F12 solo en algunos teclados)
+    if (e.key === 'F12') {
+        e.preventDefault();
+        showToast('🚫 F12 deshabilitado.');
+    }
+});
