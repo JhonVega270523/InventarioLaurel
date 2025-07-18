@@ -5,10 +5,23 @@ const defaultProducts = [
     { id: 'prod-4', name: 'Rosas Rojas (unidad)', price: 5000 },
     { id: 'prod-5', name: 'Chocolates Surtidos (caja)', price: 20000 },
     { id: 'prod-6', name: 'Taza Personalizada', price: 18000 },
-    { id: 'prod-7', name: 'Tarjeta Dedicatoria', price: 3000 }
+    { id: 'prod-7', name: 'Tarjeta Dedicatoria', price: 3000 },
+    { id: 'prod-8', name: 'Bolsa de Regalo Grande', price: 8000 },
+    { id: 'prod-9', name: 'Cerveza Artesanal (unidad)', price: 12000 },
+    { id: 'prod-10', name: 'Vino Tinto Pequeño', price: 25000 },
+    { id: 'prod-11', name: 'Snacks Salados (paquete)', price: 6000 },
+    { id: 'prod-12', name: 'Dulces Importados', price: 9000 },
+    { id: 'prod-13', name: 'Libreta Personalizada', price: 14000 },
+    { id: 'prod-14', name: 'Esfero de Lujo', price: 11000 },
+    { id: 'prod-15', name: 'Perfume Pequeño', price: 35000 },
+    { id: 'prod-16', name: 'Set de Velas Aromáticas', price: 22000 },
+    { id: 'prod-17', name: 'Marco de Fotos Digital', price: 50000 },
+    { id: 'prod-18', name: 'Altavoz Bluetooth Mini', price: 40000 }
 ];
 
 const ORDERS_PER_PAGE = 6; // Número de pedidos a mostrar inicialmente
+const PRODUCTS_PER_PAGE = 15; // Número de productos a mostrar por página
+let currentProductPage = 1;  // Página actual de productos
 
 let products = [];
 let orders = [];
@@ -20,8 +33,8 @@ const searchInput = document.getElementById('productSearch');
 const searchResultsDiv = document.getElementById('search-results');
 const laborCostInput = document.getElementById('laborCost');
 const deliveryCostInput = document.getElementById('deliveryCost');
-const profitPercentageInput = document.getElementById('profitPercentage'); // NUEVO: Input para porcentaje de ganancia
-const estimatedProfitSpan = document.getElementById('estimatedProfit'); // NUEVO: Span para mostrar ganancia estimada
+const profitPercentageInput = document.getElementById('profitPercentage'); // Input para porcentaje de ganancia
+const estimatedProfitSpan = document.getElementById('estimatedProfit'); // Span para mostrar ganancia estimada
 const selectedProductsDiv = document.getElementById('selected-products');
 const finalTotalSpan = document.getElementById('finalTotal');
 const saveOrderBtn = document.getElementById('saveOrderBtn');
@@ -42,14 +55,14 @@ const filterEndDateInput = document.getElementById('filterEndDate');
 const filterClientNameInput = document.getElementById('filterClientName');
 const filterOrderNumberInput = document.getElementById('filterOrderNumber');
 const filteredOrdersTotalSpan = document.getElementById('filteredOrdersTotal');
-const filteredProfitsTotalSpan = document.getElementById('filteredProfitsTotal'); // Nuevo: Span para ganancias filtradas
+const filteredProfitsTotalSpan = document.getElementById('filteredProfitsTotal'); // Span para ganancias filtradas
 const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
 const clientDetailsModal = document.getElementById('clientDetailsModal');
 const clientModalCloseButton = document.querySelector('.client-modal-close');
 const modalClientNameInput = document.getElementById('modalClientName');
 const modalClientContactInput = document.getElementById('modalClientContact');
-const modalDeliveryDateInput = document.getElementById('modalDeliveryDate'); // NUEVO: Campo Fecha de Entrega
+const modalDeliveryDateInput = document.getElementById('modalDeliveryDate'); // Campo Fecha de Entrega
 const modalDeliveryTimeInput = document.getElementById('modalDeliveryTime');
 const modalDeliveryAddressInput = document.getElementById('modalDeliveryAddress');
 const modalReferencePointInput = document.getElementById('modalReferencePoint'); // Campo Punto de Referencia
@@ -80,7 +93,7 @@ const clientsDbModal = document.getElementById('clientsDbModal');
 const clientsDbModalCloseButton = document.querySelector('.clients-db-modal-close');
 const clientsTableBody = document.querySelector('#clients-table tbody');
 const noClientsMessageClientsDb = document.getElementById('noClientsMessage');
-const exportClientsBtn = document.getElementById('exportClientsBtn'); // Nuevo: Botón de exportar clientes
+const exportClientsBtn = document.getElementById('exportClientsBtn'); // Botón de exportar clientes
 
 const exportProductsBtn = document.getElementById('exportProductsBtn');
 const importProductsBtn = document.getElementById('importProductsBtn');
@@ -90,7 +103,13 @@ const exportOrdersBtn = document.getElementById('exportOrdersBtn');
 const filterStatusPendingBtn = document.getElementById('filterStatusPending');
 const filterStatusDispatchedBtn = document.getElementById('filterStatusDispatched');
 const filterStatusDeliveredBtn = document.getElementById('filterStatusDelivered');
-const filterStatusAllBtn = document.getElementById('filterStatusAll'); // Nuevo botón "Todos"
+const filterStatusAllBtn = document.getElementById('filterStatusAll'); // Botón "Todos"
+
+// Nuevos elementos DOM para la paginación de productos
+const productPaginationDiv = document.getElementById('product-pagination');
+const prevProductPageBtn = document.getElementById('prevProductPageBtn');
+const nextProductPageBtn = document.getElementById('nextProductPageBtn');
+const productPageInfoSpan = document.getElementById('productPageInfo');
 
 let currentStatusFilter = 'all'; // Variable para almacenar el filtro de estado activo
 
@@ -200,22 +219,58 @@ function loadClientsFromLocalStorage() {
 
 function renderProductTable() {
     productsTableBody.innerHTML = '';
-    products.forEach(product => {
-        const row = productsTableBody.insertRow();
-        row.dataset.id = product.id;
-        row.innerHTML = `
-            <td>${product.name}</td>
-            <td>$${formatCurrency(product.price)}</td>
-            <td>
-                <button class="edit-btn" data-id="${product.id}">Editar</button>
-                <button class="delete-btn" data-id="${product.id}">Eliminar</button>
-            </td>
-        `;
-    });
-    addTableEventListeners();
-    filterAndRenderProductSelection();
-    calculateTotal();
+    
+    // Calcular el inicio y fin de los productos a mostrar en la página actual
+    const startIndex = (currentProductPage - 1) * PRODUCTS_PER_PAGE;
+    const endIndex = startIndex + PRODUCTS_PER_PAGE;
+
+    // Obtener los productos para la página actual
+    const productsToDisplay = products.slice(startIndex, endIndex);
+
+    if (productsToDisplay.length === 0 && products.length > 0 && currentProductPage > 1) {
+        // Si no hay productos en la página actual pero sí en total, ir a la página anterior
+        currentProductPage--;
+        renderProductTable(); // Volver a llamar para renderizar la página correcta
+        return;
+    }
+
+    if (products.length === 0) {
+        productsTableBody.innerHTML = '<tr><td colspan="3">No hay productos registrados.</td></tr>';
+        productPaginationDiv.style.display = 'none'; // Ocultar paginación si no hay productos
+    } else {
+        productsToDisplay.forEach(product => {
+            const row = productsTableBody.insertRow();
+            row.dataset.id = product.id;
+            row.innerHTML = `
+                <td>${product.name}</td>
+                <td>$${formatCurrency(product.price)}</td>
+                <td>
+                    <button class="edit-btn" data-id="${product.id}">Editar</button>
+                    <button class="delete-btn" data-id="${product.id}">Eliminar</button>
+                </td>
+            `;
+        });
+        addTableEventListeners();
+        updateProductPaginationControls(); // Actualizar los controles de paginación
+    }
+    
+    filterAndRenderProductSelection(); // Asegurarse de que la lista de selección se actualice
+    calculateTotal(); // Recalcular totales si es necesario (aunque no directamente relacionado con la tabla)
 }
+
+function updateProductPaginationControls() {
+    const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
+
+    if (totalPages > 1) {
+        productPaginationDiv.style.display = 'flex'; // Mostrar la sección de paginación
+        prevProductPageBtn.disabled = currentProductPage === 1;
+        nextProductPageBtn.disabled = currentProductPage === totalPages;
+        productPageInfoSpan.textContent = `Página ${currentProductPage} de ${totalPages}`;
+    } else {
+        productPaginationDiv.style.display = 'none'; // Ocultar si solo hay una página o menos
+    }
+}
+
 
 function addTableEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(button => {
@@ -248,7 +303,7 @@ function addProduct() {
     products.push(newProduct);
     saveProductsToLocalStorage();
     resetProductForm();
-    renderProductTable();
+    renderProductTable(); // Re-renderiza para aplicar paginación si aplica
     showToast('✅ Producto añadido exitosamente.');
 }
 
@@ -288,7 +343,7 @@ function updateProduct() {
     }
     saveProductsToLocalStorage();
     resetProductForm();
-    renderProductTable();
+    renderProductTable(); // Re-renderiza para aplicar paginación si aplica
     showToast('✅ Producto actualizado exitosamente.');
 }
 
@@ -296,7 +351,7 @@ function deleteProduct(id) {
     if (confirm('¿Estás seguro de que quieres eliminar este Producto? Esta acción no se puede deshacer.')) {
         products = products.filter(product => product.id !== id);
         saveProductsToLocalStorage();
-        renderProductTable();
+        renderProductTable(); // Re-renderiza para aplicar paginación si aplica
         showToast('🗑️ Producto eliminado.');
     }
 }
@@ -314,66 +369,141 @@ function resetProductForm() {
 
 function filterAndRenderProductSelection() {
     const searchTerm = searchInput.value.toLowerCase();
-    searchResultsDiv.innerHTML = '';
+    searchResultsDiv.innerHTML = ''; // Limpiar resultados de búsqueda anteriores
 
-    const filteredProducts = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm)
-    );
+    let productsToDisplay;
 
-    if (filteredProducts.length === 0 && searchTerm !== '') {
-        searchResultsDiv.innerHTML = '<p>No se encontraron Productos.</p>';
-    } else if (filteredProducts.length === 0 && searchTerm === '') {
-        searchResultsDiv.innerHTML = '<p>No hay Productos disponibles. Agregue algunos en la sección de Gestión.</p>';
+    if (searchTerm === '') {
+        // Si la barra de búsqueda está vacía, muestra todos los productos.
+        productsToDisplay = products; 
+    } else {
+        // Si hay un término de búsqueda, filtra los productos.
+        productsToDisplay = products.filter(product =>
+            product.name.toLowerCase().includes(searchTerm)
+        );
     }
 
-    filteredProducts.forEach(product => {
-        const productDiv = document.createElement('div');
-        productDiv.classList.add('product-item');
-        const currentQuantity = currentOrderToSave && currentOrderToSave.items.find(item => item.id === product.id)
-                                             ? currentOrderToSave.items.find(item => item.id === product.id).quantity
-                                             : 0;
+    if (productsToDisplay.length > 0) {
+        const dropdownList = document.createElement('ul');
+        dropdownList.classList.add('search-dropdown'); // Clase CSS para estilizar como un desplegable
 
-        productDiv.innerHTML = `
-            <label for="${product.id}">${product.name} ($${formatCurrency(product.price)})</label>
-            <input type="number" id="${product.id}" min="0" value="${currentQuantity}" data-price="${product.price}">
-        `;
-        searchResultsDiv.appendChild(productDiv);
-    });
+        productsToDisplay.forEach(product => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${product.name} ($${formatCurrency(product.price)})`;
+            listItem.dataset.id = product.id; // Almacenar el ID del producto para fácil acceso
+            dropdownList.appendChild(listItem);
+        });
+        searchResultsDiv.appendChild(dropdownList);
 
-    document.querySelectorAll('#search-results input[type="number"]').forEach(input => {
-        input.addEventListener('input', calculateTotal);
-        input.addEventListener('change', calculateTotal);
-    });
+        // Añadir evento click a cada ítem del desplegable
+        dropdownList.querySelectorAll('li').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const productId = e.target.dataset.id;
+                addProductToSummary(productId); // Llamar a la función para añadir al resumen
+                searchInput.value = ''; // Limpiar la barra de búsqueda
+                searchResultsDiv.innerHTML = ''; // Ocultar el desplegable
+            });
+        });
+    } else if (searchTerm !== '') {
+        // Solo mostrar "No se encontraron productos" si hay un término de búsqueda y no hay coincidencias
+        searchResultsDiv.innerHTML = '<p>No se encontraron productos.</p>';
+    } else if (products.length === 0) {
+        // Si no hay ningún producto cargado en la base de datos
+        searchResultsDiv.innerHTML = '<p>No hay Productos disponibles. Agregue algunos en la sección de Gestión.</p>';
+    }
+    // Si no hay término de búsqueda y hay productos, pero no se hace clic, el div searchResultsDiv estará vacío, lo cual es el comportamiento deseado (desplegable oculto hasta interactuar).
+}
+
+function addProductToSummary(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    if (!currentOrderToSave) {
+        currentOrderToSave = {
+            items: [],
+            laborCost: parseFloat(laborCostInput.value) || 0,
+            deliveryCost: parseFloat(deliveryCostInput.value) || 0,
+            profitPercentage: parseFloat(profitPercentageInput.value) || 0,
+            totalIncrementAmount: 0,
+            estimatedProfit: 0,
+            finalTotal: 0,
+            totalBasePriceOfItems: 0,
+            finalProfit: 0
+        };
+    }
+
+    const existingItemIndex = currentOrderToSave.items.findIndex(item => item.id === productId);
+
+    if (existingItemIndex !== -1) {
+        currentOrderToSave.items[existingItemIndex].quantity++;
+        showToast(`Cantidad de "${product.name}" aumentada.`);
+    } else {
+        currentOrderToSave.items.push({
+            id: product.id,
+            name: product.name,
+            quantity: 1,
+            basePrice: product.price,
+            totalBasePrice: product.price,
+            itemIncrement: product.price * 0.20
+        });
+        showToast(`"${product.name}" añadido al pedido.`);
+    }
+    calculateTotal();
+}
+
+function updateItemQuantity(productId, newQuantity) {
+    if (!currentOrderToSave || !currentOrderToSave.items) {
+        return;
+    }
+
+    const existingItemIndex = currentOrderToSave.items.findIndex(item => item.id === productId);
+
+    if (newQuantity <= 0) {
+        if (existingItemIndex !== -1) {
+            currentOrderToSave.items.splice(existingItemIndex, 1);
+            showToast(`Producto removido del pedido.`);
+        }
+    } else {
+        if (existingItemIndex !== -1) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                currentOrderToSave.items[existingItemIndex].quantity = newQuantity;
+                currentOrderToSave.items[existingItemIndex].totalBasePrice = product.price * newQuantity;
+                currentOrderToSave.items[existingItemIndex].itemIncrement = (product.price * newQuantity) * 0.20;
+            }
+        } else {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                currentOrderToSave.items.push({
+                    id: product.id,
+                    name: product.name,
+                    quantity: newQuantity,
+                    basePrice: product.price,
+                    totalBasePrice: product.price * newQuantity,
+                    itemIncrement: (product.price * newQuantity) * 0.20,
+                });
+            }
+        }
+    }
+    calculateTotal();
 }
 
 function calculateTotal() {
     let totalBasePriceOfItems = 0;
-    let totalItemsCount = 0;
-    let currentOrderItems = [];
     let totalIncrementAmount = 0;
+    
+    // Asegúrate de que currentOrderToSave.items no sea nulo al inicio
+    let currentOrderItems = currentOrderToSave && currentOrderToSave.items ? [...currentOrderToSave.items] : [];
 
-    products.forEach(product => {
-        const input = document.getElementById(product.id);
-        if (input) {
-            const quantity = parseInt(input.value);
+    currentOrderItems.forEach(item => {
+        const productData = products.find(p => p.id === item.id);
+        if (productData) {
+            item.basePrice = productData.price; // Asegura usar el precio más reciente
+            item.totalBasePrice = item.basePrice * item.quantity;
+            item.itemIncrement = item.totalBasePrice * 0.20; // 20% de incremento
 
-            if (quantity > 0) {
-                const itemBasePrice = product.price * quantity;
-                const itemIncrement = itemBasePrice * 0.20; // 20% de incremento
-                
-                totalBasePriceOfItems += itemBasePrice;
-                totalIncrementAmount += itemIncrement;
-                totalItemsCount += quantity;
-
-                currentOrderItems.push({
-                    id: product.id,
-                    name: product.name,
-                    quantity: quantity,
-                    basePrice: product.price,
-                    totalBasePrice: itemBasePrice,
-                    itemIncrement: itemIncrement,
-                });
-            }
+            totalBasePriceOfItems += item.totalBasePrice;
+            totalIncrementAmount += item.itemIncrement;
         }
     });
 
@@ -381,33 +511,97 @@ function calculateTotal() {
     const deliveryCost = parseFloat(deliveryCostInput.value) || 0;
     const profitPercentage = parseFloat(profitPercentageInput.value) || 0;
 
-    // Calcular la base para la ganancia del porcentaje
     const baseForPercentageProfit = totalBasePriceOfItems + totalIncrementAmount + laborCost;
     const percentageProfit = baseForPercentageProfit * (profitPercentage / 100);
 
-    // La ganancia estimada consolidada suma el incremento del 20% y la ganancia por porcentaje
     const estimatedProfitConsolidated = totalIncrementAmount + percentageProfit;
 
-    // El total final ahora incluye la ganancia estimada consolidada
     const finalTotal = totalBasePriceOfItems + totalIncrementAmount + laborCost + deliveryCost + percentageProfit;
 
-    currentOrderToSave = {
-        items: currentOrderItems,
-        laborCost: laborCost,
-        deliveryCost: deliveryCost,
-        totalIncrementAmount: totalIncrementAmount,
-        estimatedProfit: estimatedProfitConsolidated, // Almacenar la ganancia consolidada
-        profitPercentage: profitPercentage,
-        finalTotal: finalTotal,
-        totalBasePriceOfItems: totalBasePriceOfItems,
-        finalProfit: estimatedProfitConsolidated // Guardar la ganancia consolidada para el historial
-    };
+    // Si currentOrderToSave es nulo por alguna razón, inicialízalo aquí
+    if (!currentOrderToSave) {
+        currentOrderToSave = {};
+    }
+    currentOrderToSave.items = currentOrderItems; // Actualiza los ítems
+    currentOrderToSave.laborCost = laborCost;
+    currentOrderToSave.deliveryCost = deliveryCost;
+    currentOrderToSave.totalIncrementAmount = totalIncrementAmount;
+    currentOrderToSave.estimatedProfit = estimatedProfitConsolidated;
+    currentOrderToSave.profitPercentage = profitPercentage;
+    currentOrderToSave.finalTotal = finalTotal;
+    currentOrderToSave.totalBasePriceOfItems = totalBasePriceOfItems;
+    currentOrderToSave.finalProfit = estimatedProfitConsolidated;
 
     updateOrderSummary(currentOrderItems, laborCost, deliveryCost, finalTotal, totalIncrementAmount, totalBasePriceOfItems, estimatedProfitConsolidated, percentageProfit);
+
+    // Actualiza los spans de totales visibles
+    estimatedProfitSpan.textContent = `$${formatCurrency(estimatedProfitConsolidated)}`;
+    finalTotalSpan.textContent = `$${formatCurrency(finalTotal)}`;
+    
+    if (modalClientDetailsTotalSpan) {
+        modalClientDetailsTotalSpan.textContent = `$${formatCurrency(finalTotal)}`;
+    }
+    
+    if (deliveryModalFinalTotal) {
+        deliveryModalFinalTotal.textContent = `$${formatCurrency(finalTotal)}`;
+    }
+}
+
+// Renombramos y modificamos esta función para que sea más completa
+function clearCalculator() {
+    // 1. Resetear los campos de búsqueda y el desplegable de resultados
+    searchInput.value = '';
+    searchResultsDiv.innerHTML = '';
+
+    // 2. Resetear los inputs de costos adicionales
+    laborCostInput.value = '0';
+    deliveryCostInput.value = '0';
+    profitPercentageInput.value = '0';
+
+    // 3. Resetear el resumen de productos seleccionados
+    selectedProductsDiv.innerHTML = '<p>No hay productos seleccionados ni costos adicionales.</p>';
+
+    // 4. Resetear los spans de totales visibles en la calculadora
+    estimatedProfitSpan.textContent = '$0';
+    finalTotalSpan.textContent = '$0';
+
+    // 5. Reiniciar la variable del pedido actual, es CRUCIAL
+    currentOrderToSave = {
+        items: [],
+        laborCost: 0,
+        deliveryCost: 0,
+        profitPercentage: 0,
+        totalIncrementAmount: 0,
+        estimatedProfit: 0,
+        finalTotal: 0,
+        totalBasePriceOfItems: 0,
+        finalProfit: 0
+    };
+
+    // 6. Resetear los campos del modal de detalles del cliente
+    modalClientNameInput.value = '';
+    modalClientContactInput.value = '';
+    modalDeliveryDateInput.value = '';
+    modalDeliveryTimeInput.value = '';
+    modalDeliveryAddressInput.value = '';
+    modalReferencePointInput.value = '';
+    modalCityNeighborhoodInput.value = '';
+    modalProductDetailsInput.value = '';
+    modalProductNameFinalInput.value = '';
+    modalClientDetailsTotalSpan.textContent = `$0`; 
+
+    // 7. Deshabilitar el botón de guardar pedido si no hay nada en la calculadora
+    saveOrderBtn.disabled = true;
+
+    // 8. Reiniciar la variable de cliente a editar
+    currentClientToEdit = null;
+    confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido'; 
+
+    showToast('Calculadora reiniciada.');
 }
 
 function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAmount, totalBasePriceOfItems, estimatedProfitConsolidated, percentageProfit) {
-    selectedProductsDiv.innerHTML = '';
+    selectedProductsDiv.innerHTML = ''; // ¡Borra el contenido anterior!
 
     saveOrderBtn.disabled = (orderItems.length === 0 && labor === 0 && delivery === 0 && estimatedProfitConsolidated === 0);
 
@@ -417,13 +611,49 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
     } else {
         orderItems.forEach(item => {
             const itemElement = document.createElement('div');
-            itemElement.classList.add('order-item');
+            itemElement.classList.add('order-item-summary');
             itemElement.innerHTML = `
-                <span>${item.name} x ${item.quantity} ($${formatCurrency(item.basePrice)} c/u)</span>
-                <span>$${formatCurrency(item.totalBasePrice)}</span>
-                <button class="remove-item" data-id="${item.id}" aria-label="Eliminar ${item.name}"></button>
+                <div class="item-info">
+                    <span>${item.name} ($${formatCurrency(item.basePrice)} c/u)</span>
+                    <span class="item-total-price">$${formatCurrency(item.totalBasePrice + item.itemIncrement)}</span>
+                </div>
+                <div class="item-controls">
+                    <button class="decrease-quantity" data-id="${item.id}">-</button>
+                    <input type="number" value="${item.quantity}" min="0" data-id="${item.id}" class="quantity-input">
+                    <button class="increase-quantity" data-id="${item.id}">+</button>
+                    <button class="remove-item-from-summary" data-id="${item.id}" aria-label="Eliminar ${item.name}"></button>
+                </div>
             `;
             selectedProductsDiv.appendChild(itemElement);
+        });
+
+        selectedProductsDiv.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('input', (e) => updateItemQuantity(e.target.dataset.id, parseInt(e.target.value) || 0));
+            input.addEventListener('change', (e) => updateItemQuantity(e.target.dataset.id, parseInt(e.target.value) || 0));
+        });
+        selectedProductsDiv.querySelectorAll('.decrease-quantity').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const input = selectedProductsDiv.querySelector(`.quantity-input[data-id="${e.target.dataset.id}"]`);
+                if (input && parseInt(input.value) > 0) {
+                    input.value = parseInt(input.value) - 1;
+                    updateItemQuantity(e.target.dataset.id, parseInt(input.value));
+                }
+            });
+        });
+        selectedProductsDiv.querySelectorAll('.increase-quantity').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const input = selectedProductsDiv.querySelector(`.quantity-input[data-id="${e.target.dataset.id}"]`);
+                if (input) {
+                    input.value = parseInt(input.value) + 1;
+                    updateItemQuantity(e.target.dataset.id, parseInt(input.value));
+                }
+            });
+        });
+        selectedProductsDiv.querySelectorAll('.remove-item-from-summary').forEach(button => {
+            button.addEventListener('click', function() {
+                const productIdToRemove = this.dataset.id;
+                updateItemQuantity(productIdToRemove, 0); // Establecer cantidad a 0 para eliminar
+            });
         });
 
         if (totalBasePriceOfItems > 0) {
@@ -456,7 +686,7 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
             selectedProductsDiv.appendChild(laborElement);
         }
 
-        if (percentageProfit > 0) { // Mostrar la ganancia del porcentaje por separado en el resumen
+        if (percentageProfit > 0) {
             const profitElement = document.createElement('div');
             profitElement.classList.add('order-item');
             profitElement.innerHTML = `
@@ -476,22 +706,10 @@ function updateOrderSummary(orderItems, labor, delivery, total, totalIncrementAm
             selectedProductsDiv.appendChild(deliveryElement);
         }
     }
-
     estimatedProfitSpan.textContent = `$${formatCurrency(estimatedProfitConsolidated)}`;
     finalTotalSpan.textContent = `$${formatCurrency(total)}`;
-
-    document.querySelectorAll('.remove-item').forEach(button => {
-        button.addEventListener('click', function() {
-            const productIdToRemove = this.dataset.id;
-            const inputToReset = document.getElementById(productIdToRemove);
-            if (inputToReset) {
-                inputToReset.value = 0;
-                calculateTotal();
-                filterAndRenderProductSelection();
-            }
-        });
-    });
 }
+
 
 // --- Funciones de Gestión de Clientes ---
 
@@ -593,19 +811,32 @@ function handleSaveOrder() {
         return;
     }
 
-    if (currentClientToEdit) {
+    if (currentClientToSave) { // Si estamos editando un cliente existente
+        modalClientNameInput.value = currentClientToSave.clientName || '';
+        modalClientContactInput.value = currentClientToSave.clientContact || '';
+        modalDeliveryDateInput.value = currentOrderToSave.deliveryDate ? currentOrderToSave.deliveryDate.toISOString().split('T')[0] : ''; // Formato YYYY-MM-DD
+        modalDeliveryTimeInput.value = currentOrderToSave.deliveryTime || '';
+        modalDeliveryAddressInput.value = currentOrderToSave.deliveryAddress || '';
+        modalReferencePointInput.value = currentOrderToSave.referencePoint || '';
+        modalCityNeighborhoodInput.value = currentOrderToSave.cityNeighborhood || '';
+        modalProductDetailsInput.value = currentOrderToSave.productDetails || '';
+        modalProductNameFinalInput.value = currentOrderToSave.productNameFinal || '';
+        modalClientDetailsTotalSpan.textContent = `$${formatCurrency(currentOrderToSave.finalTotal)}`;
+        confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente'; // Cambiar texto del botón
+    } else if (currentClientToEdit) { // Si estamos editando un cliente desde la DB de clientes
         modalClientNameInput.value = currentClientToEdit.name;
         modalClientContactInput.value = currentClientToEdit.contact || '';
-        modalDeliveryDateInput.value = ''; // No auto-llenar fecha de entrega para edición
+        modalDeliveryDateInput.value = '';
         modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = currentClientToEdit.address || '';
-        modalReferencePointInput.value = currentClientToEdit.referencePoint || ''; // Nuevo: Punto de Referencia
+        modalReferencePointInput.value = currentClientToEdit.referencePoint || '';
         modalCityNeighborhoodInput.value = currentClientToEdit.cityNeighborhood || '';
-        modalProductDetailsInput.value = ''; // No auto-llenar detalles de producto
+        modalProductDetailsInput.value = '';
         modalProductNameFinalInput.value = '';
-        modalClientDetailsTotalSpan.textContent = `$0`;
+        modalClientDetailsTotalSpan.textContent = `$0`; // No hay total asociado a solo editar cliente
         confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
-    } else {
+    }
+     else { // Nuevo pedido
         modalClientNameInput.value = '';
         modalClientContactInput.value = '';
         modalDeliveryDateInput.value = ''; // Resetear campo de fecha
@@ -653,6 +884,7 @@ function confirmAndSaveOrder() {
     }
 
     if (!currentOrderToSave) {
+        showToast('⚠️ No hay datos de pedido para guardar.');
         return;
     }
 
@@ -699,7 +931,7 @@ function confirmAndSaveOrder() {
     }
 
     renderOrderHistory();
-    clearCalculatorInputs();
+    clearCalculator(); // Llama a la nueva función para reiniciar la calculadora
     closeClientDetailsModal();
     showToast('✅ Pedido guardado exitosamente.');
 }
@@ -725,7 +957,6 @@ function renderOrderHistory() {
         return matchesDate && matchesClient && matchesOrderNumber && matchesStatus; // Incluir el nuevo filtro
     });
 
-    // Lógica de Ordenamiento (se mantiene como la última modificación)
     filteredOrders.sort((a, b) => {
         const statusOrder = { 'pending': 0, 'dispatched': 1, 'delivered': 2 };
 
@@ -748,10 +979,7 @@ function renderOrderHistory() {
         
         return timeA - timeB;
     });
-    // Fin de la Lógica de Ordenamiento
 
-    // ... el resto de la función renderOrderHistory() sigue igual ...
-    // Asegúrate de que esta parte no se modifique:
     filteredOrders.forEach(order => {
         totalFilteredOrdersAmount += order.finalTotal;
         totalFilteredProfitsAmount += order.finalProfit || 0;
@@ -772,7 +1000,6 @@ function renderOrderHistory() {
 
             const orderCard = document.createElement('div');
             orderCard.classList.add('recorded-order-card');
-            // ... el contenido innerHTML de la tarjeta sigue igual ...
             orderCard.innerHTML = `
                 <button class="delete-order-btn" data-id="${order.orderNumber}" aria-label="Eliminar Pedido ${order.orderNumber}">❌</button>
                 <h4>Pedido #${order.orderNumber}</h4>
@@ -863,7 +1090,6 @@ function toggleOrderStatus(orderNumber) {
         orders[orderIndex].status = newStatus;
         saveOrdersToLocalStorage();
         
-        // Actualizar el filtro activo para mostrar el nuevo estado
         currentStatusFilter = newStatus; // Establece el filtro al nuevo estado
         updateStatusFilterButtons(newStatus); // Actualiza la clase activa de los botones
         renderOrderHistory(); // Vuelve a renderizar con el nuevo filtro
@@ -879,27 +1105,6 @@ function deleteOrder(orderNumber) {
         renderOrderHistory();
         showToast(`🗑️ Pedido #${orderNumber} eliminado.`);
     }
-}
-
-function clearCalculatorInputs() {
-    document.querySelectorAll('#search-results input[type="number"]').forEach(input => {
-        input.value = 0;
-    });
-    laborCostInput.value = 0;
-    deliveryCostInput.value = 0;
-    profitPercentageInput.value = 0;
-    modalClientNameInput.value = '';
-    modalClientContactInput.value = '';
-    modalDeliveryDateInput.value = ''; // Resetear
-    modalDeliveryTimeInput.value = '';
-    modalDeliveryAddressInput.value = '';
-    modalReferencePointInput.value = ''; // Resetear
-    modalCityNeighborhoodInput.value = '';
-    modalProductDetailsInput.value = ''; // Resetear
-    modalProductNameFinalInput.value = '';
-    calculateTotal();
-    confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido';
-    currentClientToEdit = null;
 }
 
 function clearAllFilters() {
@@ -920,12 +1125,12 @@ function showDeliveryInfoModal(orderNumber) {
         deliveryModalOrderNumber.textContent = order.orderNumber;
         deliveryModalClientName.textContent = order.clientName || 'N/A';
         deliveryModalClientContact.textContent = order.clientContact || 'N/A';
-        deliveryModalDeliveryDate.textContent = order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A'; // Nuevo
+        deliveryModalDeliveryDate.textContent = order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A';
         deliveryModalDeliveryTime.textContent = order.deliveryTime || 'N/A';
         deliveryModalDeliveryAddress.textContent = order.deliveryAddress || 'N/A';
-        deliveryModalReferencePoint.textContent = order.referencePoint || 'N/A'; // Nuevo
+        deliveryModalReferencePoint.textContent = order.referencePoint || 'N/A';
         deliveryModalCityNeighborhood.textContent = order.cityNeighborhood || 'N/A';
-        deliveryModalProductDetails.textContent = order.productDetails || 'N/A'; // Nuevo
+        deliveryModalProductDetails.textContent = order.productDetails || 'N/A';
         deliveryModalProductNameFinal.textContent = order.productNameFinal || 'N/A';
         deliveryModalFinalTotal.textContent = `$${formatCurrency(order.finalTotal)}`;
         deliveryInfoModal.style.display = 'flex';
@@ -938,7 +1143,6 @@ function closeDeliveryInfoModal() {
 
 function closeClientDetailsModal() {
     clientDetailsModal.style.display = 'none';
-    clearCalculatorInputs();
 }
 
 function showClientsDbModal() {
@@ -954,12 +1158,12 @@ function copyDeliveryInfoToClipboard() {
     const orderNumber = deliveryModalOrderNumber.textContent;
     const clientName = deliveryModalClientName.textContent;
     const clientContact = deliveryModalClientContact.textContent;
-    const deliveryDate = deliveryModalDeliveryDate.textContent; // Nuevo
+    const deliveryDate = deliveryModalDeliveryDate.textContent;
     const deliveryTime = deliveryModalDeliveryTime.textContent;
     const deliveryAddress = deliveryModalDeliveryAddress.textContent;
-    const referencePoint = deliveryModalReferencePoint.textContent; // Nuevo
+    const referencePoint = deliveryModalReferencePoint.textContent;
     const cityNeighborhood = deliveryModalCityNeighborhood.textContent;
-    const productDetails = deliveryModalProductDetails.textContent; // Nuevo
+    const productDetails = deliveryModalProductDetails.textContent;
     const productNameFinal = deliveryModalProductNameFinal.textContent;
     const finalTotal = deliveryModalFinalTotal.textContent;
 
@@ -992,12 +1196,12 @@ function sendDeliveryInfoToWhatsapp() {
     const clientContact = deliveryModalClientContact.textContent;
     const orderNumber = deliveryModalOrderNumber.textContent;
     const clientName = deliveryModalClientName.textContent;
-    const deliveryDate = deliveryModalDeliveryDate.textContent; // Nuevo
+    const deliveryDate = deliveryModalDeliveryDate.textContent;
     const deliveryTime = deliveryModalDeliveryTime.textContent;
     const deliveryAddress = deliveryModalDeliveryAddress.textContent;
-    const referencePoint = deliveryModalReferencePoint.textContent; // Nuevo
+    const referencePoint = deliveryModalReferencePoint.textContent;
     const cityNeighborhood = deliveryModalCityNeighborhood.textContent;
-    const productDetails = deliveryModalProductDetails.textContent; // Nuevo
+    const productDetails = deliveryModalProductDetails.textContent;
     const productNameFinal = deliveryModalProductNameFinal.textContent;
     const finalTotal = deliveryModalFinalTotal.textContent;
 
@@ -1039,18 +1243,18 @@ function exportTableToExcel(tableId, filename = '', includeOrderDetails = false)
                 order.date.toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 order.clientName || 'N/A',
                 order.clientContact || 'N/A',
-                order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A', // Nuevo
+                order.deliveryDate ? order.deliveryDate.toLocaleDateString('es-CO') : 'N/A',
                 order.deliveryTime || 'N/A',
                 order.deliveryAddress || 'N/A',
-                order.referencePoint || 'N/A', // Nuevo
+                order.referencePoint || 'N/A',
                 order.cityNeighborhood || 'N/A',
-                order.productDetails || 'N/A', // Nuevo
+                order.productDetails || 'N/A',
                 order.productNameFinal || 'N/A',
                 itemsDetail,
                 order.totalBasePriceOfItems,
                 order.totalIncrementAmount,
                 order.laborCost,
-                order.estimatedProfit, // Ganancia consolidada
+                order.estimatedProfit,
                 order.profitPercentage,
                 order.deliveryCost,
                 order.finalTotal,
@@ -1076,14 +1280,12 @@ function exportTableToExcel(tableId, filename = '', includeOrderDetails = false)
         }
         data.push(headers);
 
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            const rowData = [];
-            const cells = row.querySelectorAll('td');
-            for (let i = 0; i < cells.length - 1; i++) {
-                rowData.push(cells[i].textContent.trim());
-            }
-            data.push(rowData);
+        // Exportar TODOS los productos, no solo los de la página actual
+        products.forEach(product => {
+            data.push([
+                product.name,
+                `$${formatCurrency(product.price)}`
+            ]);
         });
 
         ws = XLSX.utils.aoa_to_sheet(data);
@@ -1230,6 +1432,16 @@ updateProductBtn.addEventListener('click', updateProduct);
 cancelEditBtn.addEventListener('click', resetProductForm);
 
 searchInput.addEventListener('input', filterAndRenderProductSelection);
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value === '') {
+        filterAndRenderProductSelection();
+    }
+});
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-section')) {
+        searchResultsDiv.innerHTML = '';
+    }
+});
 
 laborCostInput.addEventListener('input', calculateTotal);
 laborCostInput.addEventListener('change', calculateTotal);
@@ -1264,31 +1476,10 @@ showMoreOrdersBtn.addEventListener('click', () => {
     renderOrderHistory();
 });
 
-// ... tus otros Event Listeners
-
 filterStatusPendingBtn.addEventListener('click', () => setStatusFilter('pending'));
 filterStatusDispatchedBtn.addEventListener('click', () => setStatusFilter('dispatched'));
 filterStatusDeliveredBtn.addEventListener('click', () => setStatusFilter('delivered'));
 filterStatusAllBtn.addEventListener('click', () => setStatusFilter('all'));
-
-// Asegúrate de que la inicialización del filtro se haga al cargar
-document.addEventListener('DOMContentLoaded', () => {
-    // ... tus otras cargas y renderizaciones iniciales
-    loadProductsFromLocalStorage();
-    loadOrdersFromLocalStorage();
-    loadClientsFromLocalStorage();
-
-    renderProductTable();
-    filterAndRenderProductSelection();
-    calculateTotal();
-    
-    // Inicializar el filtro de estado y renderizar historial
-    currentStatusFilter = 'all'; // Por defecto, mostrar todos al cargar
-    updateStatusFilterButtons(currentStatusFilter); // Asegurar que el botón "Todos" esté activo
-    renderOrderHistory(); 
-
-    setupTabs();
-});
 
 modalClientNameInput.addEventListener('input', autoFillClientDetails);
 
@@ -1322,6 +1513,22 @@ importProductsBtn.addEventListener('click', () => {
 });
 importProductsFile.addEventListener('change', importProductsFromExcel);
 
+// Event Listeners para los botones de paginación de productos
+prevProductPageBtn.addEventListener('click', () => {
+    if (currentProductPage > 1) {
+        currentProductPage--;
+        renderProductTable();
+    }
+});
+
+nextProductPageBtn.addEventListener('click', () => {
+    const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
+    if (currentProductPage < totalPages) {
+        currentProductPage++;
+        renderProductTable();
+    }
+});
+
 // --- Funciones de Tabs ---
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -1343,23 +1550,42 @@ function setupTabs() {
                 calculateTotal();
             } else if (targetTab === 'order-history') {
                 renderOrderHistory();
+            } else if (targetTab === 'product-management') {
+                renderProductTable(); // Asegurar que la tabla de productos se renderice con paginación
             }
         });
     });
 }
-
 
 document.addEventListener('DOMContentLoaded', () => {
     loadProductsFromLocalStorage();
     loadOrdersFromLocalStorage();
     loadClientsFromLocalStorage();
 
-    renderProductTable(); // Renderiza la tabla de productos
-    filterAndRenderProductSelection(); // Renderiza los productos seleccionables en la calculadora
-    calculateTotal(); // Calcula el total inicial (debería ser 0 si no hay nada)
-    renderOrderHistory(); // Renderiza el historial de pedidos
+    renderProductTable(); // Ahora renderProductTable manejará la paginación
+    filterAndRenderProductSelection();
+    
+    // Inicializar currentOrderToSave si no existe
+    if (!currentOrderToSave) {
+        currentOrderToSave = {
+            items: [],
+            laborCost: 0,
+            deliveryCost: 0,
+            profitPercentage: 0,
+            totalIncrementAmount: 0,
+            estimatedProfit: 0,
+            finalTotal: 0,
+            totalBasePriceOfItems: 0,
+            finalProfit: 0
+        };
+    }
+    calculateTotal();
+    
+    currentStatusFilter = 'all';
+    updateStatusFilterButtons(currentStatusFilter);
+    renderOrderHistory(); 
 
-    setupTabs(); // Configura la lógica de las pestañas
+    setupTabs();
 });
 
 // --- Bloqueo de Funciones de Desarrollador ---

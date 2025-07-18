@@ -40,8 +40,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                </tbody>
             </table>
+        </div>
+
+        <div id="product-pagination" class="pagination-controls" style="display: none;">
+            <button id="prevProductPageBtn">Anterior</button>
+            <span id="productPageInfo">Página 1 de 1</span>
+            <button id="nextProductPageBtn">Siguiente</button>
         </div>
 
         <div id="order-calculator" class="tab-content">
@@ -49,7 +55,7 @@
             <div class="calculator-inputs">
                 <div class="search-section">
                     <input type="text" id="productSearch" placeholder="Buscar Producto...">
-                    <div id="search-results" class="product-selection-grid">
+                    <div id="search-results" class="search-dropdown-container">
                         </div>
                 </div>
                 <div class="cost-inputs">
@@ -86,16 +92,18 @@
                 <input type="text" id="filterOrderNumber" placeholder="Filtrar por # Pedido">
                 <button id="clearFiltersBtn" class="action-btn">Limpiar Filtros</button>
                 <button id="exportOrdersBtn" class="action-btn">Exportar Pedidos (Excel)</button>
-                <button id="exportClientsBtn" class="action-btn">Exportar Clientes (Excel)</button> <button id="showClientsDbBtn" class="action-btn">Ver Base de Datos de Clientes</button>
+                <button id="exportClientsBtn" class="action-btn">Exportar Clientes (Excel)</button> 
+                <button id="showClientsDbBtn" class="action-btn">Ver Base de Datos de Clientes</button>
             </div>
             <p id="noOrdersMessage" class="info-message" style="display: none;">No hay pedidos registrados.</p>
             <div class="order-filters-status" style="margin-bottom: 10px; display: flex; gap: 5px;">
-            <button id="filterStatusPending" class="status-filter-btn pending-color">Pendientes</button>
-            <button id="filterStatusDispatched" class="status-filter-btn dispatched-color">Despachados</button>
-            <button id="filterStatusDelivered" class="status-filter-btn delivered-color">Entregados</button>
-            <button id="filterStatusAll" class="status-filter-btn all-color active">Todos</button> </div>
+                <button id="filterStatusPending" class="status-filter-btn pending-color">Pendientes</button>
+                <button id="filterStatusDispatched" class="status-filter-btn dispatched-color">Despachados</button>
+                <button id="filterStatusDelivered" class="status-filter-btn delivered-color">Entregados</button>
+                <button id="filterStatusAll" class="status-filter-btn all-color active">Todos</button> 
+            </div>
             <div id="order-history-list" class="order-cards-container">
-                </div>
+            </div>
             <button id="showMoreOrdersBtn" class="action-btn" style="display: none;">Ver Más Pedidos</button>
             <div class="final-total">
                 <span>Total Pedidos Filtrados:</span> <span id="filteredOrdersTotal">$0</span>
@@ -184,7 +192,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
