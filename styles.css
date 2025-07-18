@@ -1129,25 +1129,25 @@ button {
     padding: 8px 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    background-color: #cd4fcd;
+    background-color: #F8E8F8;
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.2s ease;
 }
 
 #product-pagination button:hover:not(:disabled) {
-    background-color: #8e148e;
+    background-color: #efc7ef;
 }
 
 #product-pagination button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: #cd4fcd;
+    background-color: #efc7ef;
 }
 
 #productPageInfo {
     font-weight: bold;
-    color: #333;
+    color: #efc7ef;
     /* No necesitas margin aquí si usas 'gap' en el contenedor flex */
 }
 
