@@ -16,8 +16,21 @@ const defaultProducts = [
     { id: 'prod-15', name: 'Perfume Pequeño', price: 35000 },
     { id: 'prod-16', name: 'Set de Velas Aromáticas', price: 22000 },
     { id: 'prod-17', name: 'Marco de Fotos Digital', price: 50000 },
-    { id: 'prod-18', name: 'Altavoz Bluetooth Mini', price: 40000 }
+    { id: 'prod-18', name: 'Altavoz Bluetooth Mini', price: 40000 },
+    { id: 'prod-19', name: 'Audífonos Inalámbricos', price: 60000 },
+    { id: 'prod-20', name: 'Cargador Portátil', price: 25000 },
+    { id: 'prod-21', name: 'Kit de Maquillaje Básico', price: 45000 },
+    { id: 'prod-22', name: 'Juego de Tazas de Café', price: 30000 },
+    { id: 'prod-23', name: 'Plantas Pequeñas (unidad)', price: 10000 },
+    { id: 'prod-24', name: 'Libro Best-Seller', price: 30000 },
+    { id: 'prod-25', name: 'Vaso Térmico', price: 15000 },
+    { id: 'prod-26', name: 'Juego de Mesa Portátil', price: 28000 },
+    { id: 'prod-27', name: 'Gorra Deportiva', price: 17000 },
+    { id: 'prod-28', name: 'Manta Suave', price: 38000 },
+    { id: 'prod-29', name: 'Difusor de Aromas', price: 29000 },
+    { id: 'prod-30', name: 'Caja de Té Gourmet', price: 20000 }
 ];
+
 
 const ORDERS_PER_PAGE = 6; // Número de pedidos a mostrar inicialmente
 const PRODUCTS_PER_PAGE = 15; // Número de productos a mostrar por página
@@ -110,6 +123,9 @@ const productPaginationDiv = document.getElementById('product-pagination');
 const prevProductPageBtn = document.getElementById('prevProductPageBtn');
 const nextProductPageBtn = document.getElementById('nextProductPageBtn');
 const productPageInfoSpan = document.getElementById('productPageInfo');
+
+// Nuevo elemento DOM para el botón de scroll to top
+const scrollToTopBtn = document.getElementById('scrollToTopBtn');
 
 let currentStatusFilter = 'all'; // Variable para almacenar el filtro de estado activo
 
@@ -264,6 +280,7 @@ function renderProductTable() {
     calculateTotal(); 
 }
 
+
 function updateProductPaginationControls() {
     const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
 
@@ -278,6 +295,7 @@ function updateProductPaginationControls() {
         productPaginationDiv.style.display = 'none';
     }
 }
+
 
 function addTableEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(button => {
@@ -358,6 +376,9 @@ function deleteProduct(id) {
     if (confirm('¿Estás seguro de que quieres eliminar este Producto? Esta acción no se puede deshacer.')) {
         products = products.filter(product => product.id !== id);
         saveProductsToLocalStorage();
+        // Al eliminar un producto, podríamos necesitar ajustar la página actual
+        // si el producto eliminado era el último de la página o si la página actual
+        // ya no tiene elementos. renderProductTable() ya maneja esto.
         renderProductTable(); // Re-renderiza para aplicar paginación si aplica
         showToast('🗑️ Producto eliminado.');
     }
@@ -728,9 +749,12 @@ function saveClient(clientData) {
         if(oldClientIndex !== -1) {
             clientsDb[oldClientIndex] = { ...clientsDb[oldClientIndex], ...clientData };
         } else {
-            clientsDb.push(clientData);
+            // Este caso es poco probable si currentClientToEdit proviene de la DB,
+            // pero lo dejamos por seguridad si se edita un cliente no existente.
+            clientsDb.push(clientData); 
         }
     } else if (existingClientIndex !== -1) {
+        // Actualiza el cliente existente si no estamos en modo edición específico de la DB
         clientsDb[existingClientIndex] = { ...clientsDb[existingClientIndex], ...clientData };
     } else {
         clientsDb.push(clientData);
@@ -752,18 +776,21 @@ function editClient(clientName) {
     const clientToEdit = clientsDb.find(client => client.name.toLowerCase() === clientName.toLowerCase());
     if (clientToEdit) {
         currentClientToEdit = clientToEdit;
-        closeClientsDbModal();
-        handleSaveOrder();
+        closeClientsDbModal(); // Cierra el modal de la DB de clientes
+        
+        // Abre el modal de detalles del cliente para la edición
+        clientDetailsModal.style.display = 'flex'; 
+        
         modalClientNameInput.value = clientToEdit.name;
         modalClientContactInput.value = clientToEdit.contact || '';
-        modalDeliveryDateInput.value = ''; // No auto-llenar fecha de entrega para edición
+        modalDeliveryDateInput.value = ''; // No auto-llenar fecha de entrega para edición de cliente
         modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = clientToEdit.address || '';
-        modalReferencePointInput.value = clientToEdit.referencePoint || ''; // Nuevo: Punto de Referencia
+        modalReferencePointInput.value = clientToEdit.referencePoint || '';
         modalCityNeighborhoodInput.value = clientToEdit.cityNeighborhood || '';
         modalProductDetailsInput.value = ''; // No auto-llenar detalles de producto
         modalProductNameFinalInput.value = '';
-        modalClientDetailsTotalSpan.textContent = `$0`;
+        modalClientDetailsTotalSpan.textContent = `$0`; // No hay total asociado a solo editar cliente
         confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
         modalClientNameInput.focus();
     }
@@ -818,47 +845,29 @@ function handleSaveOrder() {
         return;
     }
 
-    if (currentClientToSave) { // Si estamos editando un cliente existente
-        modalClientNameInput.value = currentClientToSave.clientName || '';
-        modalClientContactInput.value = currentClientToSave.clientContact || '';
-        modalDeliveryDateInput.value = currentOrderToSave.deliveryDate ? currentOrderToSave.deliveryDate.toISOString().split('T')[0] : ''; // Formato YYYY-MM-DD
-        modalDeliveryTimeInput.value = currentOrderToSave.deliveryTime || '';
-        modalDeliveryAddressInput.value = currentOrderToSave.deliveryAddress || '';
-        modalReferencePointInput.value = currentOrderToSave.referencePoint || '';
-        modalCityNeighborhoodInput.value = currentOrderToSave.cityNeighborhood || '';
-        modalProductDetailsInput.value = currentOrderToSave.productDetails || '';
-        modalProductNameFinalInput.value = currentOrderToSave.productNameFinal || '';
-        modalClientDetailsTotalSpan.textContent = `$${formatCurrency(currentOrderToSave.finalTotal)}`;
-        confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente'; // Cambiar texto del botón
-    } else if (currentClientToEdit) { // Si estamos editando un cliente desde la DB de clientes
-        modalClientNameInput.value = currentClientToEdit.name;
-        modalClientContactInput.value = currentClientToEdit.contact || '';
-        modalDeliveryDateInput.value = '';
-        modalDeliveryTimeInput.value = '';
-        modalDeliveryAddressInput.value = currentClientToEdit.address || '';
-        modalReferencePointInput.value = currentClientToEdit.referencePoint || '';
-        modalCityNeighborhoodInput.value = currentClientToEdit.cityNeighborhood || '';
-        modalProductDetailsInput.value = '';
-        modalProductNameFinalInput.value = '';
-        modalClientDetailsTotalSpan.textContent = `$0`; // No hay total asociado a solo editar cliente
-        confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
-    }
-     else { // Nuevo pedido
+    // Reinicia los campos del modal cada vez que se abre para un nuevo pedido
+    // A menos que estemos en un modo de edición de cliente (currentClientToEdit)
+    if (!currentClientToEdit) {
         modalClientNameInput.value = '';
         modalClientContactInput.value = '';
-        modalDeliveryDateInput.value = ''; // Resetear campo de fecha
+        modalDeliveryDateInput.value = '';
         modalDeliveryTimeInput.value = '';
         modalDeliveryAddressInput.value = '';
-        modalReferencePointInput.value = ''; // Resetear
+        modalReferencePointInput.value = '';
         modalCityNeighborhoodInput.value = '';
-        modalProductDetailsInput.value = ''; // Resetear
+        modalProductDetailsInput.value = '';
         modalProductNameFinalInput.value = '';
         modalClientDetailsTotalSpan.textContent = `$${formatCurrency(currentOrderToSave.finalTotal)}`;
         confirmSaveOrderBtn.textContent = 'Confirmar y Guardar Pedido';
+    } else {
+        // Si estamos en modo de edición de cliente, solo ajusta el botón de confirmación
+        confirmSaveOrderBtn.textContent = 'Actualizar Datos de Cliente';
     }
-
+    
+    // Abre el modal de detalles del cliente
     clientDetailsModal.style.display = 'flex';
 }
+
 
 function confirmAndSaveOrder() {
     const clientName = modalClientNameInput.value.trim();
@@ -884,7 +893,7 @@ function confirmAndSaveOrder() {
             referencePoint: referencePoint, // Guardar
             cityNeighborhood: cityNeighborhood
         });
-        currentClientToEdit = null;
+        currentClientToEdit = null; // Sale del modo de edición de cliente
         closeClientDetailsModal();
         showToast('✅ Cliente actualizado exitosamente.');
         return;
@@ -895,6 +904,7 @@ function confirmAndSaveOrder() {
         return;
     }
 
+    // Validaciones para guardar un nuevo pedido
     if ((currentOrderToSave.deliveryCost > 0 || currentOrderToSave.laborCost > 0 || currentOrderToSave.items.length > 0 || currentOrderToSave.estimatedProfit > 0) && (!clientName || !clientContact || !deliveryAddress || !cityNeighborhood)) {
         showToast('⚠️ Por favor, completa los datos del cliente y de entrega si hay costos o productos asociados.');
         return;
@@ -1097,9 +1107,12 @@ function toggleOrderStatus(orderNumber) {
         orders[orderIndex].status = newStatus;
         saveOrdersToLocalStorage();
         
-        currentStatusFilter = newStatus; // Establece el filtro al nuevo estado
-        updateStatusFilterButtons(newStatus); // Actualiza la clase activa de los botones
-        renderOrderHistory(); // Vuelve a renderizar con el nuevo filtro
+        // No es necesario establecer el filtro global aquí a menos que quieras
+        // que al cambiar el estado, se filtre automáticamente la lista.
+        // Si no, puedes simplemente llamar a renderOrderHistory() sin cambiar currentStatusFilter.
+        // currentStatusFilter = newStatus; 
+        updateStatusFilterButtons(currentStatusFilter); // Mantener el filtro actual visualmente
+        renderOrderHistory(); 
         
         showToast(`🔄 Estado de Pedido #${orderNumber} actualizado a: ${statusText}.`);
     }
@@ -1120,6 +1133,8 @@ function clearAllFilters() {
     filterClientNameInput.value = '';
     filterOrderNumberInput.value = '';
     allOrdersVisible = false;
+    currentStatusFilter = 'all'; // Resetea el filtro de estado también
+    updateStatusFilterButtons('all'); // Actualiza los botones de filtro visualmente
     renderOrderHistory();
     showToast('🧹 Filtros de pedidos limpiados.');
 }
@@ -1536,6 +1551,24 @@ nextProductPageBtn.addEventListener('click', () => {
     }
 });
 
+// Lógica para el botón de scroll to top
+window.addEventListener('scroll', () => {
+    // Comprueba si el scroll vertical es mayor a 300px (o la altura que desees)
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+        scrollToTopBtn.style.display = "block"; // Muestra el botón
+    } else {
+        scrollToTopBtn.style.display = "none"; // Oculta el botón
+    }
+});
+
+// Al hacer clic en el botón, desplázate suavemente hacia arriba
+scrollToTopBtn.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth' // Desplazamiento suave
+    });
+});
+
 // --- Funciones de Tabs ---
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -1545,8 +1578,8 @@ function setupTabs() {
         button.addEventListener('click', () => {
             const targetTab = button.dataset.tab;
 
-            // Oculta la paginación de productos al cambiar de pestaña
-            productPaginationDiv.style.display = 'none'; 
+            // Oculta explícitamente la paginación de productos al cambiar de pestaña
+            productPaginationDiv.style.display = 'none';
 
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
@@ -1565,6 +1598,9 @@ function setupTabs() {
             }
         });
     });
+
+    // CAMBIO AQUÍ: Activar la pestaña de "Gestión de Productos" por defecto al cargar la página
+    document.querySelector('.tab-button[data-tab="product-management"]').click();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1572,9 +1608,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOrdersFromLocalStorage();
     loadClientsFromLocalStorage();
 
-    renderProductTable(); // Ahora renderProductTable manejará la paginación
-    filterAndRenderProductSelection();
-    
     // Inicializar currentOrderToSave si no existe
     if (!currentOrderToSave) {
         currentOrderToSave = {
@@ -1593,9 +1626,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     currentStatusFilter = 'all';
     updateStatusFilterButtons(currentStatusFilter);
-    renderOrderHistory(); 
-
-    setupTabs();
+    // renderOrderHistory() y renderProductTable() se llamarán dentro de setupTabs()
+    // al activar la pestaña por defecto.
+    setupTabs(); // Llama a setupTabs al final para iniciar la interfaz
 });
 
 // --- Bloqueo de Funciones de Desarrollador ---
@@ -1629,5 +1662,10 @@ function updateStatusFilterButtons(activeStatus) {
     allFilterButtons.forEach(button => {
         button.classList.remove('active');
     });
-    document.getElementById(`filterStatus${activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)}`).classList.add('active');
+    // Asegura que el ID del botón coincida con el formato: filterStatus + Capitalizado
+    const buttonId = `filterStatus${activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)}`;
+    const activeButton = document.getElementById(buttonId);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
 }

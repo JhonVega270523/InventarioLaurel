@@ -1151,5 +1151,115 @@ button {
     /* No necesitas margin aquí si usas 'gap' en el contenedor flex */
 }
 
+/* Estilos para navegadores basados en Webkit (Chrome, Safari, Edge, Opera) */
+/* Este es el estándar más común para personalizar scrollbars */
+::-webkit-scrollbar {
+    width: 12px; /* Ancho del scrollbar vertical */
+    height: 12px; /* Altura del scrollbar horizontal (si aplica) */
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Color de fondo de la pista del scrollbar */
+    border-radius: 6px; /* Bordes redondeados para la pista */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #FF69B4; /* Color del "pulgar" (el control que se arrastra) - Rosa Fuerte */
+    border-radius: 6px; /* Bordes redondeados para el pulgar */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #FF1493; /* Color del pulgar al pasar el mouse - Rosa Más Fuerte */
+}
+
+/* Estilos para navegadores Firefox */
+/* Firefox usa propiedades diferentes para scrollbars */
+/* Nota: Las opciones de personalización son más limitadas en Firefox */
+/* Si deseas un color de scrollbar rosado, Firefox solo permite un color de track y thumb */
+html, body {
+    scrollbar-color: #FF69B4 #f1f1f1; /* thumb-color track-color */
+    scrollbar-width: thin; /* 'auto' | 'thin' | 'none' */
+}
+
+/* Si tienes elementos específicos con overflow que quieres personalizar,
+   puedes aplicar los estilos webkit a ellos. Por ejemplo, para la tabla de productos: */
+.table-container {
+    overflow-x: auto; /* Asegúrate de que tenga overflow si el contenido es muy ancho */
+    overflow-y: auto; /* Si la tabla puede ser muy larga */
+}
+
+.table-container::-webkit-scrollbar {
+    width: 10px; /* Ancho más pequeño para scrollbars internos */
+    height: 10px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #FF69B4;
+    border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #FF1493;
+}
+
+/* También puedes aplicar esto a cualquier div con overflow: auto; o overflow-y: auto; */
+/* Por ejemplo, si tu lista de historial de pedidos o el div de productos seleccionados
+   pudieran tener un scroll propio: */
+#order-history-list, #selected-products {
+    overflow-y: auto; /* Habilitar scroll vertical si el contenido excede la altura */
+    max-height: 400px; /* Definir una altura máxima para que el scroll aparezca */
+    /* Aquí también puedes aplicar los estilos ::-webkit-scrollbar como en .table-container */
+}
+
+/* Ejemplo para un contenedor específico con scroll (si lo usas) */
+#searchResultsDiv::-webkit-scrollbar {
+    width: 8px; /* Scrollbar más delgado para resultados de búsqueda */
+}
+
+#searchResultsDiv::-webkit-scrollbar-track {
+    background: #f9f9f9;
+}
+
+#searchResultsDiv::-webkit-scrollbar-thumb {
+    background: #FF69B4;
+    border-radius: 4px;
+}
+
+/* --- Botón de Scroll to Top --- */
+#scrollToTopBtn {
+    display: none; /* **OCULTO por defecto** al cargar la página */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000; /* Un z-index alto para asegurar que esté visible sobre otros elementos */
+    font-size: 24px;
+    border: none;
+    outline: none;
+    background-color: #FF69B4;
+    color: white;
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 100% !important; /* ¡Esta línea lo hace circular! */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.3s, opacity 0.3s;
+    opacity: 0.8;
+    width: 50px;   /* Ancho fijo */
+    height: 50px;  /* Alto fijo */
+    padding: 0;    /* Eliminar padding para que width/height controlen el tamaño */
+    line-height: 50px; /* Centra verticalmente el contenido (el emoji) */
+    text-align: center; /* Centra horizontalmente el contenido */
+    border-radius: 50%; /* O 100%, ambos dan el mismo efecto para un círculo */
+}
+
+#scrollToTopBtn:hover {
+    background-color: #FF1493;
+    opacity: 1;
+}
+
 /* Asegúrate de que tus estilos generales (.input-group, .totals-summary, .order-actions)
    y los de las pestañas (.tabs, .tab-button, .tab-content) sigan siendo válidos. */
