@@ -1116,7 +1116,7 @@ button {
 
 /* Estilos para el contenedor de paginación de productos */
 #product-pagination {
-    display: flex; /* Usa flexbox para alinear elementos */
+    display: none; /* Inicialmente oculto por defecto */
     justify-content: center; /* Centra los elementos horizontalmente */
     align-items: center; /* Centra los elementos verticalmente */
     margin-top: 15px; /* Espacio superior para separarlo de la tabla */

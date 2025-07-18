@@ -227,20 +227,24 @@ function renderProductTable() {
     // Obtener los productos para la página actual
     const productsToDisplay = products.slice(startIndex, endIndex);
 
+    // Si no hay productos en la página actual pero sí en total, y no es la primera página,
+    // significa que el último producto de la página actual fue eliminado.
+    // En ese caso, retrocede a la página anterior y vuelve a renderizar.
     if (productsToDisplay.length === 0 && products.length > 0 && currentProductPage > 1) {
-        // Si no hay productos en la página actual pero sí en total, ir a la página anterior
         currentProductPage--;
-        renderProductTable(); // Volver a llamar para renderizar la página correcta
-        return;
+        renderProductTable(); // Llama recursivamente para renderizar la página correcta
+        return; // Sal del current call para evitar renderizado duplicado
     }
 
     if (products.length === 0) {
+        // Si no hay productos en absoluto, muestra un mensaje y oculta la paginación.
         productsTableBody.innerHTML = '<tr><td colspan="3">No hay productos registrados.</td></tr>';
-        productPaginationDiv.style.display = 'none'; // Ocultar paginación si no hay productos
+        productPaginationDiv.style.display = 'none';
     } else {
+        // Si hay productos, renderiza los de la página actual
         productsToDisplay.forEach(product => {
             const row = productsTableBody.insertRow();
-            row.dataset.id = product.id;
+            row.dataset.id = product.id; // Asigna el ID del producto al dataset de la fila
             row.innerHTML = `
                 <td>${product.name}</td>
                 <td>$${formatCurrency(product.price)}</td>
@@ -250,27 +254,30 @@ function renderProductTable() {
                 </td>
             `;
         });
-        addTableEventListeners();
-        updateProductPaginationControls(); // Actualizar los controles de paginación
+        addTableEventListeners(); // Añade los event listeners a los botones de editar/eliminar
+        updateProductPaginationControls(); // Actualiza el estado y visibilidad de los controles de paginación
     }
     
-    filterAndRenderProductSelection(); // Asegurarse de que la lista de selección se actualice
-    calculateTotal(); // Recalcular totales si es necesario (aunque no directamente relacionado con la tabla)
+    // Estas funciones se llaman aquí porque la lista de productos puede afectar la selección
+    // en la calculadora o los cálculos totales, independientemente de la paginación.
+    filterAndRenderProductSelection(); 
+    calculateTotal(); 
 }
 
 function updateProductPaginationControls() {
     const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
 
     if (totalPages > 1) {
-        productPaginationDiv.style.display = 'flex'; // Mostrar la sección de paginación
+        // Solo muestra la paginación si hay más de una página de productos
+        productPaginationDiv.style.display = 'flex';
         prevProductPageBtn.disabled = currentProductPage === 1;
         nextProductPageBtn.disabled = currentProductPage === totalPages;
         productPageInfoSpan.textContent = `Página ${currentProductPage} de ${totalPages}`;
     } else {
-        productPaginationDiv.style.display = 'none'; // Ocultar si solo hay una página o menos
+        // Oculta la paginación si solo hay una página o menos
+        productPaginationDiv.style.display = 'none';
     }
 }
-
 
 function addTableEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(button => {
@@ -1538,6 +1545,9 @@ function setupTabs() {
         button.addEventListener('click', () => {
             const targetTab = button.dataset.tab;
 
+            // Oculta la paginación de productos al cambiar de pestaña
+            productPaginationDiv.style.display = 'none'; 
+
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
 
@@ -1551,7 +1561,7 @@ function setupTabs() {
             } else if (targetTab === 'order-history') {
                 renderOrderHistory();
             } else if (targetTab === 'product-management') {
-                renderProductTable(); // Asegurar que la tabla de productos se renderice con paginación
+                renderProductTable(); // Esta función hará visible la paginación si aplica
             }
         });
     });
