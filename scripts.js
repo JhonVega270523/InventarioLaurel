@@ -1634,20 +1634,29 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Bloqueo de Funciones de Desarrollador ---
 document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
-    showToast('🚫 Clic derecho deshabilitado.');
 });
 
 document.addEventListener('keydown', function(e) {
-    // Bloquear Ctrl+U
-    if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
-        showToast('🚫 Ctrl+U deshabilitado.');
-    }
-    // Bloquear Fn+F12 (o F12 solo en algunos teclados)
-    if (e.key === 'F12') {
-        e.preventDefault();
-        showToast('🚫 F12 deshabilitado.');
-    }
+    // F12
+            if (e.keyCode == 123) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I (Windows/Linux) o Cmd+Option+I (Mac)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+J (Windows/Linux) o Cmd+Option+J (Mac)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+            // Ctrl+U (Ver código fuente)
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+            // Ctrl+S (Guardar página)
+            if (e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) {
+                e.preventDefault();
+            }
 });
 
 function setStatusFilter(status) {
